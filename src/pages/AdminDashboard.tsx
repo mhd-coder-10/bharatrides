@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
   Car, Bike, Users, IndianRupee, TrendingUp, Calendar,
   Menu, X, Search, Bell, LogOut, Home, Settings,
   BarChart3, FileText, CircleDollarSign, Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { vehicles } from '@/data/vehicles';
+import { vehicles as defaultVehicles } from '@/data/vehicles';
+import AddVehicleForm from '@/components/admin/AddVehicleForm';
+import { Vehicle } from '@/types/vehicle';
 
 const stats = [
   { title: 'Total Vehicles', value: '1,247', change: '+12%', icon: Car, color: 'text-primary' },
@@ -40,6 +48,20 @@ const navItems = [
 
 export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [addVehicleOpen, setAddVehicleOpen] = useState(false);
+  const [allVehicles, setAllVehicles] = useState<Vehicle[]>([]);
+
+  useEffect(() => {
+    // Load custom vehicles from localStorage and merge with default
+    const customVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
+    setAllVehicles([...defaultVehicles, ...customVehicles]);
+  }, []);
+
+  const refreshVehicles = () => {
+    const customVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
+    setAllVehicles([...defaultVehicles, ...customVehicles]);
+    setAddVehicleOpen(false);
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline', label: string }> = {
@@ -207,7 +229,11 @@ export default function AdminDashboard() {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => setAddVehicleOpen(true)}
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Add New Vehicle
                   </Button>
@@ -238,7 +264,7 @@ export default function AdminDashboard() {
                       </div>
                       <span className="text-sm">Cars Available</span>
                     </div>
-                    <span className="font-semibold">{vehicles.filter(v => v.type === 'car').length}</span>
+                    <span className="font-semibold">{allVehicles.filter(v => v.type === 'car').length}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -247,7 +273,7 @@ export default function AdminDashboard() {
                       </div>
                       <span className="text-sm">Bikes Available</span>
                     </div>
-                    <span className="font-semibold">{vehicles.filter(v => v.type === 'bike').length}</span>
+                    <span className="font-semibold">{allVehicles.filter(v => v.type === 'bike').length}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -264,6 +290,19 @@ export default function AdminDashboard() {
           </div>
         </main>
       </div>
+
+      {/* Add Vehicle Dialog */}
+      <Dialog open={addVehicleOpen} onOpenChange={setAddVehicleOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Vehicle</DialogTitle>
+          </DialogHeader>
+          <AddVehicleForm 
+            onSuccess={refreshVehicles} 
+            onCancel={() => setAddVehicleOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
