@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Car, Bike, Filter, Search, X, Building2 } from 'lucide-react';
+import { Car, Bike, Filter, Search, X, Building2, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VehicleType, FuelType } from '@/types/vehicle';
 
@@ -125,11 +125,12 @@ export default function VehiclesPage() {
       {/* Vehicle Type */}
       <div>
         <Label className="text-sm font-semibold mb-3 block">Vehicle Type</Label>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {[
             { value: 'all', label: 'All', icon: null },
             { value: 'car', label: 'Cars', icon: Car },
             { value: 'bike', label: 'Bikes', icon: Bike },
+            { value: 'scooter', label: 'Scooters', icon: Zap },
           ].map((type) => (
             <button
               key={type.value}
@@ -237,7 +238,9 @@ export default function VehiclesPage() {
                   ? 'All Vehicles' 
                   : vehicleType === 'car' 
                     ? 'Cars' 
-                    : 'Bikes'}
+                    : vehicleType === 'scooter'
+                      ? 'Scooters / Activa'
+                      : 'Bikes'}
             </h1>
             <p className="text-primary-foreground/80">
               {filteredVehicles.length} vehicles available for rent
@@ -257,6 +260,7 @@ export default function VehiclesPage() {
                 { value: 'all', label: 'All', icon: null },
                 { value: 'car', label: 'Cars', icon: Car },
                 { value: 'bike', label: 'Bikes', icon: Bike },
+                { value: 'scooter', label: 'Scooters / Activa', icon: Zap },
               ].map((type) => (
                 <Button
                   key={type.value}

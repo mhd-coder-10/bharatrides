@@ -151,7 +151,7 @@ export const vehicles: Vehicle[] = [
     id: '9',
     name: 'Honda Activa 6G',
     brand: 'Honda',
-    type: 'bike',
+    type: 'scooter',
     image: 'https://images.unsplash.com/photo-1622185135505-2d795003994a?w=800&auto=format&fit=crop&q=80',
     pricePerDay: 400,
     pricePerHour: 35,
@@ -164,16 +164,105 @@ export const vehicles: Vehicle[] = [
     year: 2024,
     mileage: '50 km/l',
   },
+  {
+    id: '10',
+    name: 'TVS Jupiter 125',
+    brand: 'TVS',
+    type: 'scooter',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop&q=80',
+    pricePerDay: 350,
+    pricePerHour: 30,
+    fuelType: 'petrol',
+    rating: 4.5,
+    reviewCount: 389,
+    available: true,
+    location: 'Chennai, Tamil Nadu',
+    features: ['LED DRL', 'Mobile Charger', 'External Fuel Lid', 'Econometer'],
+    year: 2024,
+    mileage: '52 km/l',
+  },
+  {
+    id: '11',
+    name: 'Suzuki Access 125',
+    brand: 'Suzuki',
+    type: 'scooter',
+    image: 'https://images.unsplash.com/photo-1558981285-6f0c94958bb6?w=800&auto=format&fit=crop&q=80',
+    pricePerDay: 380,
+    pricePerHour: 32,
+    fuelType: 'petrol',
+    rating: 4.4,
+    reviewCount: 276,
+    available: true,
+    location: 'Delhi NCR',
+    features: ['LED Headlamp', 'Bluetooth', 'External Fuel Lid', 'Alloy Wheels'],
+    year: 2024,
+    mileage: '48 km/l',
+  },
+  {
+    id: '12',
+    name: 'Ola S1 Pro',
+    brand: 'Ola Electric',
+    type: 'scooter',
+    image: 'https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800&auto=format&fit=crop&q=80',
+    pricePerDay: 500,
+    pricePerHour: 40,
+    fuelType: 'electric',
+    rating: 4.7,
+    reviewCount: 198,
+    available: true,
+    location: 'Bangalore, Karnataka',
+    features: ['Touchscreen', 'Music System', 'Navigation', 'Reverse Mode'],
+    year: 2024,
+    mileage: '181 km range',
+  },
+  {
+    id: '13',
+    name: 'Ather 450X',
+    brand: 'Ather',
+    type: 'scooter',
+    image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&auto=format&fit=crop&q=80',
+    pricePerDay: 550,
+    pricePerHour: 45,
+    fuelType: 'electric',
+    rating: 4.8,
+    reviewCount: 156,
+    available: true,
+    location: 'Pune, Maharashtra',
+    features: ['Touchscreen Dashboard', 'Google Maps', 'OTA Updates', 'Fast Charging'],
+    year: 2024,
+    mileage: '146 km range',
+  },
+  {
+    id: '14',
+    name: 'Hero Destini 125',
+    brand: 'Hero',
+    type: 'scooter',
+    image: 'https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=800&auto=format&fit=crop&q=80',
+    pricePerDay: 320,
+    pricePerHour: 28,
+    fuelType: 'petrol',
+    rating: 4.3,
+    reviewCount: 234,
+    available: true,
+    location: 'Jaipur, Rajasthan',
+    features: ['i3S Technology', 'External Fuel Lid', 'Mobile Charger', 'Boot Light'],
+    year: 2024,
+    mileage: '55 km/l',
+  },
 ];
 
 export const getVehicleById = (id: string): Vehicle | undefined => {
   return vehicles.find(v => v.id === id);
 };
 
-export const getVehiclesByType = (type: 'car' | 'bike'): Vehicle[] => {
+export const getVehiclesByType = (type: 'car' | 'bike' | 'scooter'): Vehicle[] => {
   return vehicles.filter(v => v.type === type);
 };
 
 export const getFeaturedVehicles = (): Vehicle[] => {
   return vehicles.filter(v => v.rating >= 4.7).slice(0, 4);
+};
+
+export const getScooters = (): Vehicle[] => {
+  return vehicles.filter(v => v.type === 'scooter');
 };
