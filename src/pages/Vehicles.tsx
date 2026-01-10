@@ -130,7 +130,7 @@ export default function VehiclesPage() {
             { value: 'all', label: 'All', icon: null },
             { value: 'car', label: 'Cars', icon: Car },
             { value: 'bike', label: 'Bikes', icon: Bike },
-            { value: 'scooter', label: 'Scooters', icon: Zap },
+            { value: 'activa', label: 'Activa', icon: Zap },
           ].map((type) => (
             <button
               key={type.value}
@@ -238,8 +238,8 @@ export default function VehiclesPage() {
                   ? 'All Vehicles' 
                   : vehicleType === 'car' 
                     ? 'Cars' 
-                    : vehicleType === 'scooter'
-                      ? 'Scooters / Activa'
+                    : vehicleType === 'activa'
+                      ? 'Activa'
                       : 'Bikes'}
             </h1>
             <p className="text-primary-foreground/80">
@@ -260,7 +260,7 @@ export default function VehiclesPage() {
                 { value: 'all', label: 'All', icon: null },
                 { value: 'car', label: 'Cars', icon: Car },
                 { value: 'bike', label: 'Bikes', icon: Bike },
-                { value: 'scooter', label: 'Scooters / Activa', icon: Zap },
+                { value: 'activa', label: 'Activa', icon: Zap },
               ].map((type) => (
                 <Button
                   key={type.value}
