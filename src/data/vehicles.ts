@@ -147,6 +147,23 @@ export const vehicles: Vehicle[] = [
     year: 2024,
     mileage: '15 km/l',
   },
+  {
+    id: '9',
+    name: 'Honda Activa 6G',
+    brand: 'Honda',
+    type: 'bike',
+    image: 'https://images.unsplash.com/photo-1622185135505-2d795003994a?w=800&auto=format&fit=crop&q=80',
+    pricePerDay: 400,
+    pricePerHour: 35,
+    fuelType: 'petrol',
+    rating: 4.6,
+    reviewCount: 534,
+    available: true,
+    location: 'Mumbai, Maharashtra',
+    features: ['Silent Start', 'LED Headlamp', 'External Fuel Lid', 'USB Charging'],
+    year: 2024,
+    mileage: '50 km/l',
+  },
 ];
 
 export const getVehicleById = (id: string): Vehicle | undefined => {
