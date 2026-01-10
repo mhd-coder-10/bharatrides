@@ -151,7 +151,7 @@ export const vehicles: Vehicle[] = [
     id: '9',
     name: 'Honda Activa 6G',
     brand: 'Honda',
-    type: 'scooter',
+    type: 'activa',
     image: 'https://images.unsplash.com/photo-1622185135505-2d795003994a?w=800&auto=format&fit=crop&q=80',
     pricePerDay: 400,
     pricePerHour: 35,
@@ -168,7 +168,7 @@ export const vehicles: Vehicle[] = [
     id: '10',
     name: 'TVS Jupiter 125',
     brand: 'TVS',
-    type: 'scooter',
+    type: 'activa',
     image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop&q=80',
     pricePerDay: 350,
     pricePerHour: 30,
@@ -185,7 +185,7 @@ export const vehicles: Vehicle[] = [
     id: '11',
     name: 'Suzuki Access 125',
     brand: 'Suzuki',
-    type: 'scooter',
+    type: 'activa',
     image: 'https://images.unsplash.com/photo-1558981285-6f0c94958bb6?w=800&auto=format&fit=crop&q=80',
     pricePerDay: 380,
     pricePerHour: 32,
@@ -202,7 +202,7 @@ export const vehicles: Vehicle[] = [
     id: '12',
     name: 'Ola S1 Pro',
     brand: 'Ola Electric',
-    type: 'scooter',
+    type: 'activa',
     image: 'https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=800&auto=format&fit=crop&q=80',
     pricePerDay: 500,
     pricePerHour: 40,
@@ -219,7 +219,7 @@ export const vehicles: Vehicle[] = [
     id: '13',
     name: 'Ather 450X',
     brand: 'Ather',
-    type: 'scooter',
+    type: 'activa',
     image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&auto=format&fit=crop&q=80',
     pricePerDay: 550,
     pricePerHour: 45,
@@ -236,7 +236,7 @@ export const vehicles: Vehicle[] = [
     id: '14',
     name: 'Hero Destini 125',
     brand: 'Hero',
-    type: 'scooter',
+    type: 'activa',
     image: 'https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=800&auto=format&fit=crop&q=80',
     pricePerDay: 320,
     pricePerHour: 28,
@@ -255,7 +255,7 @@ export const getVehicleById = (id: string): Vehicle | undefined => {
   return vehicles.find(v => v.id === id);
 };
 
-export const getVehiclesByType = (type: 'car' | 'bike' | 'scooter'): Vehicle[] => {
+export const getVehiclesByType = (type: 'car' | 'bike' | 'activa'): Vehicle[] => {
   return vehicles.filter(v => v.type === type);
 };
 
@@ -263,6 +263,6 @@ export const getFeaturedVehicles = (): Vehicle[] => {
   return vehicles.filter(v => v.rating >= 4.7).slice(0, 4);
 };
 
-export const getScooters = (): Vehicle[] => {
-  return vehicles.filter(v => v.type === 'scooter');
+export const getActivas = (): Vehicle[] => {
+  return vehicles.filter(v => v.type === 'activa');
 };

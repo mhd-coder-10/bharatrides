@@ -1,4 +1,4 @@
-export type VehicleType = 'car' | 'bike' | 'scooter';
+export type VehicleType = 'car' | 'bike' | 'activa';
 
 export type FuelType = 'petrol' | 'diesel' | 'electric' | 'cng';
 
