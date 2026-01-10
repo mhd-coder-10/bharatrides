@@ -10,17 +10,23 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Car, Bike, Filter, Search, X } from 'lucide-react';
+import { Car, Bike, Filter, Search, X, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VehicleType, FuelType } from '@/types/vehicle';
 
 const fuelTypes: FuelType[] = ['petrol', 'diesel', 'electric', 'cng'];
+
+// Get unique brands from vehicles
+const brands = [...new Set(vehicles.map(v => v.brand))];
 
 export default function VehiclesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   
   const [vehicleType, setVehicleType] = useState<VehicleType | 'all'>(
     (searchParams.get('type') as VehicleType) || 'all'
+  );
+  const [selectedBrand, setSelectedBrand] = useState<string | 'all'>(
+    searchParams.get('brand') || 'all'
   );
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [priceRange, setPriceRange] = useState([0, 5000]);
@@ -33,6 +39,11 @@ export default function VehiclesPage() {
     // Filter by type
     if (vehicleType !== 'all') {
       result = result.filter(v => v.type === vehicleType);
+    }
+
+    // Filter by brand
+    if (selectedBrand !== 'all') {
+      result = result.filter(v => v.brand === selectedBrand);
     }
 
     // Filter by search query
@@ -69,7 +80,7 @@ export default function VehiclesPage() {
     }
 
     return result;
-  }, [vehicleType, searchQuery, priceRange, selectedFuels, sortBy]);
+  }, [vehicleType, selectedBrand, searchQuery, priceRange, selectedFuels, sortBy]);
 
   const handleTypeChange = (type: VehicleType | 'all') => {
     setVehicleType(type);
@@ -77,6 +88,16 @@ export default function VehiclesPage() {
       searchParams.delete('type');
     } else {
       searchParams.set('type', type);
+    }
+    setSearchParams(searchParams);
+  };
+
+  const handleBrandChange = (brand: string | 'all') => {
+    setSelectedBrand(brand);
+    if (brand === 'all') {
+      searchParams.delete('brand');
+    } else {
+      searchParams.set('brand', brand);
     }
     setSearchParams(searchParams);
   };
@@ -91,6 +112,7 @@ export default function VehiclesPage() {
 
   const clearFilters = () => {
     setVehicleType('all');
+    setSelectedBrand('all');
     setSearchQuery('');
     setPriceRange([0, 5000]);
     setSelectedFuels([]);
@@ -121,6 +143,38 @@ export default function VehiclesPage() {
             >
               {type.icon && <type.icon className="h-4 w-4" />}
               {type.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Brand Filter */}
+      <div>
+        <Label className="text-sm font-semibold mb-3 block">Brand / Company</Label>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => handleBrandChange('all')}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+              selectedBrand === 'all'
+                ? "bg-secondary text-secondary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            )}
+          >
+            All Brands
+          </button>
+          {brands.map((brand) => (
+            <button
+              key={brand}
+              onClick={() => handleBrandChange(brand)}
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                selectedBrand === brand
+                  ? "bg-secondary text-secondary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              )}
+            >
+              {brand}
             </button>
           ))}
         </div>
@@ -177,11 +231,69 @@ export default function VehiclesPage() {
         <div className="bg-primary py-12">
           <div className="container">
             <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-2">
-              {vehicleType === 'all' ? 'All Vehicles' : vehicleType === 'car' ? 'Cars' : 'Bikes'}
+              {selectedBrand !== 'all' 
+                ? `${selectedBrand} Vehicles` 
+                : vehicleType === 'all' 
+                  ? 'All Vehicles' 
+                  : vehicleType === 'car' 
+                    ? 'Cars' 
+                    : 'Bikes'}
             </h1>
             <p className="text-primary-foreground/80">
               {filteredVehicles.length} vehicles available for rent
             </p>
+          </div>
+        </div>
+
+        {/* Quick Category & Brand Section */}
+        <div className="border-b border-border bg-card">
+          <div className="container py-4">
+            {/* Vehicle Type Tabs */}
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Car className="h-4 w-4" /> Category:
+              </span>
+              {[
+                { value: 'all', label: 'All', icon: null },
+                { value: 'car', label: 'Cars', icon: Car },
+                { value: 'bike', label: 'Bikes', icon: Bike },
+              ].map((type) => (
+                <Button
+                  key={type.value}
+                  variant={vehicleType === type.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleTypeChange(type.value as VehicleType | 'all')}
+                  className="gap-2"
+                >
+                  {type.icon && <type.icon className="h-4 w-4" />}
+                  {type.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Brand Quick Filters */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Building2 className="h-4 w-4" /> Brand:
+              </span>
+              <Button
+                variant={selectedBrand === 'all' ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => handleBrandChange('all')}
+              >
+                All Brands
+              </Button>
+              {brands.map((brand) => (
+                <Button
+                  key={brand}
+                  variant={selectedBrand === brand ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => handleBrandChange(brand)}
+                >
+                  {brand}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
