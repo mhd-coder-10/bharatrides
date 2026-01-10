@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Car, Bike, Zap, Crown, ArrowRight } from 'lucide-react';
+import { Car, Bike, Zap, Crown, ArrowRight, CircleDot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const categories = [
@@ -15,11 +15,20 @@ const categories = [
   {
     id: 'bikes',
     title: 'Bikes',
-    description: 'Superbikes, Cruisers, Scooters',
+    description: 'Superbikes, Cruisers & Sports',
     icon: Bike,
     href: '/vehicles?type=bike',
     count: '400+ vehicles',
     gradient: 'from-secondary to-secondary/80',
+  },
+  {
+    id: 'scooters',
+    title: 'Scooters / Activa',
+    description: 'Activa, Jupiter, Access & more',
+    icon: CircleDot,
+    href: '/vehicles?type=scooter',
+    count: '200+ vehicles',
+    gradient: 'from-accent to-accent/80',
   },
   {
     id: 'electric',
@@ -57,7 +66,7 @@ export function CategorySection() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
           {categories.map((category) => (
             <Link
               key={category.id}
