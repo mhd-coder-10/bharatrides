@@ -13,10 +13,10 @@ const Index = () => {
       <Header />
       <main className="flex-1">
         <HeroSection />
-        <CategorySection />
         <FeaturedVehicles />
-        <HowItWorks />
+        <CategorySection />
         <TestimonialsSection />
+        <HowItWorks />
         <CTASection />
       </main>
       <Footer />

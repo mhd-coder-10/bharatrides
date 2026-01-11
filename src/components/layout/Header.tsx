@@ -8,6 +8,7 @@ const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/vehicles?type=car', label: 'Cars', icon: Car },
   { href: '/vehicles?type=bike', label: 'Bikes', icon: Bike },
+  { href: '/vehicles?type=activa', label: 'Activa' },
   { href: '/about', label: 'About Us' },
   { href: '/contact', label: 'Contact' },
 ];
