@@ -11,6 +11,7 @@ const footerLinks = {
   vehicles: [
     { label: 'Cars', href: '/vehicles?type=car' },
     { label: 'Bikes', href: '/vehicles?type=bike' },
+    { label: 'Activa', href: '/vehicles?type=activa' },
     { label: 'Premium', href: '/vehicles?premium=true' },
     { label: 'Self Drive', href: '/vehicles?self-drive=true' },
   ],
