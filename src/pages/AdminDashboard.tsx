@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,8 @@ import { cn } from '@/lib/utils';
 import { vehicles as defaultVehicles } from '@/data/vehicles';
 import AddVehicleForm from '@/components/admin/AddVehicleForm';
 import { Vehicle } from '@/types/vehicle';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const stats = [
   { title: 'Total Vehicles', value: '1,247', change: '+12%', icon: Car, color: 'text-primary' },
@@ -50,6 +52,17 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [addVehicleOpen, setAddVehicleOpen] = useState(false);
   const [allVehicles, setAllVehicles] = useState<Vehicle[]>([]);
+  
+  const { user, isLoading, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect non-admin users
+  useEffect(() => {
+    if (!isLoading && (!user || !isAdmin)) {
+      toast.error('Access denied. Admin privileges required.');
+      navigate('/auth');
+    }
+  }, [user, isLoading, isAdmin, navigate]);
 
   useEffect(() => {
     // Load custom vehicles from localStorage and merge with default
@@ -63,6 +76,12 @@ export default function AdminDashboard() {
     setAddVehicleOpen(false);
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    toast.success('Logged out successfully');
+    navigate('/');
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline', label: string }> = {
       confirmed: { variant: 'default', label: 'Confirmed' },
@@ -73,6 +92,20 @@ export default function AdminDashboard() {
     const config = variants[status] || variants.pending;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Don't render if not admin
+  if (!user || !isAdmin) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-muted">
@@ -123,12 +156,14 @@ export default function AdminDashboard() {
         </nav>
 
         <div className="absolute bottom-4 left-4 right-4">
-          <Link to="/">
-            <Button variant="ghost" className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground">
-              <LogOut className="h-5 w-5 mr-3" />
-              Logout
-            </Button>
-          </Link>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-5 w-5 mr-3" />
+            Logout
+          </Button>
         </div>
       </aside>
 
@@ -159,7 +194,7 @@ export default function AdminDashboard() {
               <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
             </Button>
             <div className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold">
-              A
+              {user?.email?.[0]?.toUpperCase() || 'A'}
             </div>
           </div>
         </header>

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,10 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Car, Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { z } from 'zod';
+
+const emailSchema = z.string().email('Please enter a valid email address');
+const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 
 export default function AuthPage() {
   const [searchParams] = useSearchParams();
   const defaultTab = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading, isAdmin, signIn, signUp } = useAuth();
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,27 +32,95 @@ export default function AuthPage() {
   const [signupPhone, setSignupPhone] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
 
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && !authLoading) {
+      if (isAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [user, authLoading, isAdmin, navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate inputs
+    try {
+      emailSchema.parse(loginEmail);
+      passwordSchema.parse(loginPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+        return;
+      }
+    }
+
     setIsLoading(true);
     
-    // Simulate login - will be replaced with actual auth
-    setTimeout(() => {
+    const { error } = await signIn(loginEmail, loginPassword);
+    
+    if (error) {
       setIsLoading(false);
-      toast.success('Login successful! Redirecting...');
-    }, 1500);
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password. Please try again.');
+      } else if (error.message.includes('Email not confirmed')) {
+        toast.error('Please verify your email before logging in.');
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
+
+    toast.success('Login successful! Redirecting...');
+    // Navigation handled by useEffect
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate inputs
+    try {
+      emailSchema.parse(signupEmail);
+      passwordSchema.parse(signupPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+        return;
+      }
+    }
+
+    if (!signupName.trim()) {
+      toast.error('Please enter your full name');
+      return;
+    }
+
     setIsLoading(true);
     
-    // Simulate signup - will be replaced with actual auth
-    setTimeout(() => {
+    const { error } = await signUp(signupEmail, signupPassword, signupName);
+    
+    if (error) {
       setIsLoading(false);
-      toast.success('Account created! Please check your email to verify.');
-    }, 1500);
+      if (error.message.includes('User already registered')) {
+        toast.error('An account with this email already exists. Please login instead.');
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
+
+    setIsLoading(false);
+    toast.success('Account created successfully! You can now log in.');
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted flex flex-col">
@@ -198,7 +273,7 @@ export default function AuthPage() {
                         onChange={(e) => setSignupPassword(e.target.value)}
                         className="pl-10 pr-10"
                         required
-                        minLength={8}
+                        minLength={6}
                       />
                       <button
                         type="button"
