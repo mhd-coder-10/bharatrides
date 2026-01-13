@@ -1,9 +1,17 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Car, Bike, User, Phone, LogOut, Shield } from 'lucide-react';
+import { Menu, X, Car, Bike, User, Phone, LogOut, Shield, CalendarCheck, MessageSquare, ChevronDown, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -65,20 +73,56 @@ export function Header() {
             +91 98765 43210
           </a>
           {user ? (
-            <>
-              {isAdmin && (
-                <Link to="/admin">
-                  <Button variant="outline" size="sm">
-                    <Shield className="h-4 w-4" />
-                    Admin
-                  </Button>
-                </Link>
-              )}
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
+                    <User className="h-3.5 w-3.5 text-primary-foreground" />
+                  </div>
+                  <span className="hidden lg:inline max-w-[120px] truncate">
+                    {user.email?.split('@')[0]}
+                  </span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">My Account</p>
+                    <p className="text-xs leading-none text-muted-foreground truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {isAdmin && (
+                  <>
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin Panel
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem onClick={() => navigate('/my-bookings')}>
+                  <CalendarCheck className="mr-2 h-4 w-4" />
+                  My Bookings
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/my-messages')}>
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  My Messages
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Profile Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <>
               <Link to="/auth">
@@ -126,16 +170,37 @@ export function Header() {
             <hr className="my-2 border-border" />
             {user ? (
               <>
+                <div className="px-4 py-2 text-sm text-muted-foreground">
+                  Signed in as <span className="font-medium text-foreground">{user.email}</span>
+                </div>
                 {isAdmin && (
                   <Link to="/admin" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="outline" className="w-full">
-                      <Shield className="h-4 w-4" />
+                    <Button variant="outline" className="w-full justify-start">
+                      <Shield className="mr-2 h-4 w-4" />
                       Admin Panel
                     </Button>
                   </Link>
                 )}
-                <Button variant="outline" className="w-full" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4" />
+                <Link to="/my-bookings" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    <CalendarCheck className="mr-2 h-4 w-4" />
+                    My Bookings
+                  </Button>
+                </Link>
+                <Link to="/my-messages" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    My Messages
+                  </Button>
+                </Link>
+                <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Profile Settings
+                  </Button>
+                </Link>
+                <Button variant="destructive" className="w-full justify-start" onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </Button>
               </>
