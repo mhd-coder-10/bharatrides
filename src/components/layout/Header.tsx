@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Car, Bike, User, Phone } from 'lucide-react';
+import { Menu, X, Car, Bike, User, Phone, LogOut, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -16,6 +17,14 @@ const navLinks = [
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAdmin, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+    setIsMenuOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -55,15 +64,34 @@ export function Header() {
             <Phone className="h-4 w-4" />
             +91 98765 43210
           </a>
-          <Link to="/auth">
-            <Button variant="outline" size="sm">
-              <User className="h-4 w-4" />
-              Login
-            </Button>
-          </Link>
-          <Link to="/auth?mode=signup">
-            <Button size="sm">Get Started</Button>
-          </Link>
+          {user ? (
+            <>
+              {isAdmin && (
+                <Link to="/admin">
+                  <Button variant="outline" size="sm">
+                    <Shield className="h-4 w-4" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/auth">
+                <Button variant="outline" size="sm">
+                  <User className="h-4 w-4" />
+                  Login
+                </Button>
+              </Link>
+              <Link to="/auth?mode=signup">
+                <Button size="sm">Get Started</Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -96,15 +124,34 @@ export function Header() {
               </Link>
             ))}
             <hr className="my-2 border-border" />
-            <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
-              <Button variant="outline" className="w-full">
-                <User className="h-4 w-4" />
-                Login
-              </Button>
-            </Link>
-            <Link to="/auth?mode=signup" onClick={() => setIsMenuOpen(false)}>
-              <Button className="w-full">Get Started</Button>
-            </Link>
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Link to="/admin" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      <Shield className="h-4 w-4" />
+                      Admin Panel
+                    </Button>
+                  </Link>
+                )}
+                <Button variant="outline" className="w-full" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="outline" className="w-full">
+                    <User className="h-4 w-4" />
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/auth?mode=signup" onClick={() => setIsMenuOpen(false)}>
+                  <Button className="w-full">Get Started</Button>
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       )}
