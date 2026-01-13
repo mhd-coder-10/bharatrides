@@ -12,6 +12,11 @@ import Contact from "./pages/Contact";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
+// User pages
+import MyBookings from "./pages/MyBookings";
+import MyMessages from "./pages/MyMessages";
+import Profile from "./pages/Profile";
+
 // Admin pages
 import AdminLayout from "./components/layout/AdminLayout";
 import AdminDashboardContent from "./pages/admin/AdminDashboardContent";
@@ -39,6 +44,11 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
+            
+            {/* User routes */}
+            <Route path="/my-bookings" element={<MyBookings />} />
+            <Route path="/my-messages" element={<MyMessages />} />
+            <Route path="/profile" element={<Profile />} />
             
             {/* Admin routes with shared layout */}
             <Route path="/admin" element={<AdminLayout />}>
