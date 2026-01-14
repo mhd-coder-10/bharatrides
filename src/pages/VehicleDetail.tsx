@@ -1,26 +1,21 @@
-import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { getVehicleById, vehicles } from '@/data/vehicles';
 import { VehicleCard } from '@/components/vehicles/VehicleCard';
+import { BookingForm } from '@/components/vehicles/BookingForm';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { 
   Star, MapPin, Fuel, Users, Gauge, Calendar, 
-  Shield, CheckCircle, Phone, ArrowLeft, Clock,
+  Shield, CheckCircle, ArrowLeft, Clock,
   Cog, IndianRupee
 } from 'lucide-react';
 
 export default function VehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
   const vehicle = getVehicleById(id || '');
-  
-  const [pickupDate, setPickupDate] = useState('');
-  const [returnDate, setReturnDate] = useState('');
 
   if (!vehicle) {
     return (
@@ -41,19 +36,6 @@ export default function VehicleDetailPage() {
       </div>
     );
   }
-
-  const calculateDays = () => {
-    if (!pickupDate || !returnDate) return 1;
-    const start = new Date(pickupDate);
-    const end = new Date(returnDate);
-    const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    return diff > 0 ? diff : 1;
-  };
-
-  const days = calculateDays();
-  const subtotal = vehicle.pricePerDay * days;
-  const serviceFee = Math.round(subtotal * 0.1);
-  const total = subtotal + serviceFee;
 
   const similarVehicles = vehicles
     .filter(v => v.type === vehicle.type && v.id !== vehicle.id)
@@ -222,76 +204,7 @@ export default function VehicleDetailPage() {
 
             {/* Booking Sidebar */}
             <div>
-              <Card className="sticky top-24 border-0 shadow-elevated">
-                <CardContent className="p-6">
-                  <div className="flex items-baseline justify-between mb-6">
-                    <div>
-                      <span className="text-3xl font-bold text-foreground">₹{vehicle.pricePerDay.toLocaleString()}</span>
-                      <span className="text-muted-foreground">/day</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      ₹{vehicle.pricePerHour}/hour
-                    </span>
-                  </div>
-
-                  <div className="space-y-4 mb-6">
-                    <div>
-                      <Label htmlFor="pickup">Pick-up Date</Label>
-                      <Input
-                        id="pickup"
-                        type="date"
-                        value={pickupDate}
-                        onChange={(e) => setPickupDate(e.target.value)}
-                        min={new Date().toISOString().split('T')[0]}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="return">Return Date</Label>
-                      <Input
-                        id="return"
-                        type="date"
-                        value={returnDate}
-                        onChange={(e) => setReturnDate(e.target.value)}
-                        min={pickupDate || new Date().toISOString().split('T')[0]}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Price Breakdown */}
-                  <div className="border-t border-border pt-4 mb-6 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">₹{vehicle.pricePerDay} × {days} day{days > 1 ? 's' : ''}</span>
-                      <span>₹{subtotal.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Service fee</span>
-                      <span>₹{serviceFee.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg pt-2 border-t border-border">
-                      <span>Total</span>
-                      <span>₹{total.toLocaleString()}</span>
-                    </div>
-                  </div>
-
-                  <Button className="w-full" size="lg">
-                    Book Now
-                  </Button>
-
-                  <div className="mt-4 text-center">
-                    <a href="tel:+919876543210" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      <Phone className="h-4 w-4" />
-                      Need help? Call us
-                    </a>
-                  </div>
-
-                  <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <Shield className="h-4 w-4" />
-                    <span>Free cancellation within 24 hours</span>
-                  </div>
-                </CardContent>
-              </Card>
+              <BookingForm vehicle={vehicle} />
             </div>
           </div>
 
