@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,36 +11,84 @@ import {
 } from '@/components/ui/dialog';
 import { 
   Car, Bike, Users, IndianRupee, TrendingUp, Calendar,
-  FileText, Plus
+  FileText, Plus, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { vehicles as defaultVehicles } from '@/data/vehicles';
 import AddVehicleForm from '@/components/admin/AddVehicleForm';
 import { Vehicle } from '@/types/vehicle';
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
-const stats = [
-  { title: 'Total Vehicles', value: '1,247', change: '+12%', icon: Car, color: 'text-primary' },
-  { title: 'Active Bookings', value: '89', change: '+5%', icon: Calendar, color: 'text-secondary' },
-  { title: 'Total Users', value: '3,456', change: '+18%', icon: Users, color: 'text-success' },
-  { title: 'Revenue (Month)', value: '₹4.5L', change: '+22%', icon: IndianRupee, color: 'text-primary' },
-];
-
-const recentBookings = [
-  { id: 'BK001', customer: 'Rahul Sharma', vehicle: 'Swift Dzire', date: '2024-01-15', status: 'confirmed', amount: 3000 },
-  { id: 'BK002', customer: 'Priya Patel', vehicle: 'Royal Enfield', date: '2024-01-15', status: 'pending', amount: 1600 },
-  { id: 'BK003', customer: 'Amit Kumar', vehicle: 'Honda City', date: '2024-01-14', status: 'completed', amount: 5000 },
-  { id: 'BK004', customer: 'Sneha Reddy', vehicle: 'Hyundai Creta', date: '2024-01-14', status: 'confirmed', amount: 6000 },
-  { id: 'BK005', customer: 'Vikram Singh', vehicle: 'KTM Duke 390', date: '2024-01-13', status: 'cancelled', amount: 2400 },
-];
+interface Booking {
+  id: string;
+  vehicle_name: string;
+  email: string;
+  status: string;
+  total_price: number;
+  created_at: string;
+}
 
 export default function AdminDashboardContent() {
   const [addVehicleOpen, setAddVehicleOpen] = useState(false);
   const [allVehicles, setAllVehicles] = useState<Vehicle[]>([]);
+  const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [bookingStats, setBookingStats] = useState({ total: 0, active: 0, revenue: 0 });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const customVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
     setAllVehicles([...defaultVehicles, ...customVehicles]);
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch recent bookings
+      const { data: bookingsData, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('id, vehicle_name, email, status, total_price, created_at')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (bookingsError) throw bookingsError;
+      setRecentBookings(bookingsData || []);
+
+      // Fetch all bookings for stats
+      const { data: allBookings, error: allBookingsError } = await supabase
+        .from('bookings')
+        .select('status, total_price');
+
+      if (allBookingsError) throw allBookingsError;
+
+      const activeBookings = (allBookings || []).filter(b => 
+        b.status === 'confirmed' || b.status === 'pending'
+      ).length;
+      const totalRevenue = (allBookings || [])
+        .filter(b => b.status === 'completed' || b.status === 'confirmed')
+        .reduce((sum, b) => sum + (b.total_price || 0), 0);
+
+      setBookingStats({
+        total: allBookings?.length || 0,
+        active: activeBookings,
+        revenue: totalRevenue
+      });
+
+      // Fetch customer count
+      const { count, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      if (profilesError) throw profilesError;
+      setTotalCustomers(count || 0);
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const refreshVehicles = () => {
     const customVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
@@ -57,6 +106,30 @@ export default function AdminDashboardContent() {
     const config = variants[status] || variants.pending;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
+
+  const formatRevenue = (amount: number) => {
+    if (amount >= 100000) {
+      return `₹${(amount / 100000).toFixed(1)}L`;
+    } else if (amount >= 1000) {
+      return `₹${(amount / 1000).toFixed(1)}K`;
+    }
+    return `₹${amount}`;
+  };
+
+  const stats = [
+    { title: 'Total Vehicles', value: allVehicles.length.toString(), change: '+12%', icon: Car, color: 'text-primary' },
+    { title: 'Active Bookings', value: bookingStats.active.toString(), change: '+5%', icon: Calendar, color: 'text-secondary' },
+    { title: 'Total Customers', value: totalCustomers.toString(), change: '+18%', icon: Users, color: 'text-success' },
+    { title: 'Revenue', value: formatRevenue(bookingStats.revenue), change: '+22%', icon: IndianRupee, color: 'text-primary' },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -86,33 +159,44 @@ export default function AdminDashboardContent() {
         <Card className="lg:col-span-2 border-0 shadow-card">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent Bookings</CardTitle>
-            <Button variant="outline" size="sm">View All</Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/admin/bookings">View All</Link>
+            </Button>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 text-sm font-medium text-muted-foreground">ID</th>
-                    <th className="text-left py-3 text-sm font-medium text-muted-foreground">Customer</th>
-                    <th className="text-left py-3 text-sm font-medium text-muted-foreground">Vehicle</th>
-                    <th className="text-left py-3 text-sm font-medium text-muted-foreground">Status</th>
-                    <th className="text-right py-3 text-sm font-medium text-muted-foreground">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentBookings.map((booking) => (
-                    <tr key={booking.id} className="border-b border-border last:border-0">
-                      <td className="py-4 text-sm font-medium">{booking.id}</td>
-                      <td className="py-4 text-sm">{booking.customer}</td>
-                      <td className="py-4 text-sm text-muted-foreground">{booking.vehicle}</td>
-                      <td className="py-4">{getStatusBadge(booking.status)}</td>
-                      <td className="py-4 text-sm text-right font-medium">₹{booking.amount.toLocaleString()}</td>
+            {recentBookings.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Calendar className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No bookings yet</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 text-sm font-medium text-muted-foreground">Vehicle</th>
+                      <th className="text-left py-3 text-sm font-medium text-muted-foreground">Customer</th>
+                      <th className="text-left py-3 text-sm font-medium text-muted-foreground">Date</th>
+                      <th className="text-left py-3 text-sm font-medium text-muted-foreground">Status</th>
+                      <th className="text-right py-3 text-sm font-medium text-muted-foreground">Amount</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {recentBookings.map((booking) => (
+                      <tr key={booking.id} className="border-b border-border last:border-0">
+                        <td className="py-4 text-sm font-medium">{booking.vehicle_name}</td>
+                        <td className="py-4 text-sm text-muted-foreground">{booking.email}</td>
+                        <td className="py-4 text-sm text-muted-foreground">
+                          {format(new Date(booking.created_at), 'dd MMM')}
+                        </td>
+                        <td className="py-4">{getStatusBadge(booking.status)}</td>
+                        <td className="py-4 text-sm text-right font-medium">₹{booking.total_price.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -131,17 +215,23 @@ export default function AdminDashboardContent() {
                 <Plus className="h-4 w-4 mr-2" />
                 Add New Vehicle
               </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Calendar className="h-4 w-4 mr-2" />
-                Create Booking
+              <Button className="w-full justify-start" variant="outline" asChild>
+                <Link to="/admin/bookings">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Manage Bookings
+                </Link>
               </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <Users className="h-4 w-4 mr-2" />
-                Add Customer
+              <Button className="w-full justify-start" variant="outline" asChild>
+                <Link to="/admin/customers">
+                  <Users className="h-4 w-4 mr-2" />
+                  View Customers
+                </Link>
               </Button>
-              <Button className="w-full justify-start" variant="outline">
-                <FileText className="h-4 w-4 mr-2" />
-                Generate Report
+              <Button className="w-full justify-start" variant="outline" asChild>
+                <Link to="/admin/reports">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Generate Report
+                </Link>
               </Button>
             </CardContent>
           </Card>
@@ -171,12 +261,12 @@ export default function AdminDashboardContent() {
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-destructive/10">
-                    <Car className="h-5 w-5 text-destructive" />
+                  <div className="p-2 rounded-lg bg-purple-500/10">
+                    <Bike className="h-5 w-5 text-purple-500" />
                   </div>
-                  <span className="text-sm">Under Maintenance</span>
+                  <span className="text-sm">Scooters Available</span>
                 </div>
-                <span className="font-semibold">3</span>
+                <span className="font-semibold">{allVehicles.filter(v => v.type === 'activa').length}</span>
               </div>
             </CardContent>
           </Card>
