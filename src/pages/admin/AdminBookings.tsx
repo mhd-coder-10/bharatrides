@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Calendar, Loader2, Eye, CheckCircle, XCircle, Clock, Car, Bike, User, MapPin, Phone, Mail } from 'lucide-react';
+import { Calendar, Loader2, Eye, CheckCircle, XCircle, Clock, Car, Bike, User, MapPin, Phone, Mail, Pencil, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -17,7 +19,18 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -51,8 +64,15 @@ export default function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [editFormData, setEditFormData] = useState({
+    pickup_area: '',
+    drop_area: '',
+    status: '',
+  });
 
   const fetchBookings = async () => {
     try {
@@ -108,6 +128,97 @@ export default function AdminBookings() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleEditBooking = async () => {
+    if (!selectedBooking) return;
+    
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({
+          pickup_area: editFormData.pickup_area,
+          drop_area: editFormData.drop_area,
+          status: editFormData.status,
+        })
+        .eq('id', selectedBooking.id);
+
+      if (error) throw error;
+
+      setBookings(prev => 
+        prev.map(b => b.id === selectedBooking.id ? { 
+          ...b, 
+          pickup_area: editFormData.pickup_area,
+          drop_area: editFormData.drop_area,
+          status: editFormData.status,
+        } : b)
+      );
+
+      toast({
+        title: "Booking Updated",
+        description: "Booking details have been updated successfully",
+      });
+
+      setIsEditDialogOpen(false);
+      setSelectedBooking(null);
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update booking",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteBooking = async () => {
+    if (!selectedBooking) return;
+    
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', selectedBooking.id);
+
+      if (error) throw error;
+
+      setBookings(prev => prev.filter(b => b.id !== selectedBooking.id));
+
+      toast({
+        title: "Booking Deleted",
+        description: "Booking has been deleted successfully",
+      });
+
+      setIsDeleteDialogOpen(false);
+      setSelectedBooking(null);
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete booking",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openEditDialog = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setEditFormData({
+      pickup_area: booking.pickup_area,
+      drop_area: booking.drop_area,
+      status: booking.status,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const openViewDialog = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsViewDialogOpen(true);
+  };
+
+  const openDeleteDialog = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsDeleteDialogOpen(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -261,16 +372,31 @@ export default function AdminBookings() {
                     </TableCell>
                     <TableCell>{getStatusBadge(booking.status)}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => {
-                            setSelectedBooking(booking);
-                            setIsDialogOpen(true);
-                          }}
+                          onClick={() => openViewDialog(booking)}
+                          title="View"
                         >
                           <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(booking)}
+                          title="Edit"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => openDeleteDialog(booking)}
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                         {booking.status === 'pending' && (
                           <>
@@ -279,6 +405,7 @@ export default function AdminBookings() {
                               size="icon"
                               className="text-green-600 hover:text-green-700"
                               onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                              title="Confirm"
                             >
                               <CheckCircle className="h-4 w-4" />
                             </Button>
@@ -287,20 +414,11 @@ export default function AdminBookings() {
                               size="icon"
                               className="text-red-600 hover:text-red-700"
                               onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                              title="Cancel"
                             >
                               <XCircle className="h-4 w-4" />
                             </Button>
                           </>
-                        )}
-                        {booking.status === 'confirmed' && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-blue-600 hover:text-blue-700"
-                            onClick={() => updateBookingStatus(booking.id, 'completed')}
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </Button>
                         )}
                       </div>
                     </TableCell>
@@ -312,8 +430,8 @@ export default function AdminBookings() {
         </Card>
       )}
 
-      {/* Booking Details Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* View Booking Details Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Booking Details</DialogTitle>
@@ -396,6 +514,77 @@ export default function AdminBookings() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Booking Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Booking</DialogTitle>
+            <DialogDescription>
+              Update booking details
+            </DialogDescription>
+          </DialogHeader>
+          {selectedBooking && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="pickup_area">Pickup Area</Label>
+                <Input
+                  id="pickup_area"
+                  value={editFormData.pickup_area}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, pickup_area: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="drop_area">Drop Area</Label>
+                <Input
+                  id="drop_area"
+                  value={editFormData.drop_area}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, drop_area: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select 
+                  value={editFormData.status} 
+                  onValueChange={(value) => setEditFormData(prev => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="confirmed">Confirmed</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleEditBooking}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Booking</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this booking for "{selectedBooking?.vehicle_name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSelectedBooking(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteBooking} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

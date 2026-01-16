@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Car, Bike, Plus, Pencil, Trash2, Search, Filter } from 'lucide-react';
+import { Car, Bike, Plus, Pencil, Trash2, Search, Filter, Eye, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,9 +15,20 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -27,13 +38,19 @@ import {
 } from '@/components/ui/select';
 import { vehicles as defaultVehicles } from '@/data/vehicles';
 import AddVehicleForm from '@/components/admin/AddVehicleForm';
+import EditVehicleForm from '@/components/admin/EditVehicleForm';
 import { Vehicle } from '@/types/vehicle';
+import { toast } from 'sonner';
 
 export default function AdminVehicles() {
   const [allVehicles, setAllVehicles] = useState<Vehicle[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [addVehicleOpen, setAddVehicleOpen] = useState(false);
+  const [editVehicleOpen, setEditVehicleOpen] = useState(false);
+  const [viewVehicleOpen, setViewVehicleOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
   useEffect(() => {
     loadVehicles();
@@ -44,11 +61,35 @@ export default function AdminVehicles() {
     setAllVehicles([...defaultVehicles, ...customVehicles]);
   };
 
-  const handleDeleteVehicle = (vehicleId: string) => {
+  const handleDeleteVehicle = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!selectedVehicle) return;
+    
     const customVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
-    const updatedCustomVehicles = customVehicles.filter((v: Vehicle) => v.id !== vehicleId);
+    const updatedCustomVehicles = customVehicles.filter((v: Vehicle) => v.id !== selectedVehicle.id);
     localStorage.setItem('customVehicles', JSON.stringify(updatedCustomVehicles));
     loadVehicles();
+    setDeleteDialogOpen(false);
+    setSelectedVehicle(null);
+    toast.success('Vehicle deleted successfully');
+  };
+
+  const handleEditVehicle = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setEditVehicleOpen(true);
+  };
+
+  const handleViewVehicle = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setViewVehicleOpen(true);
+  };
+
+  const isCustomVehicle = (vehicleId: string) => {
+    return !defaultVehicles.find(v => v.id === vehicleId);
   };
 
   const filteredVehicles = allVehicles.filter(vehicle => {
@@ -191,19 +232,35 @@ export default function AdminVehicles() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Pencil className="h-4 w-4" />
+                    <div className="flex items-center justify-end gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleViewVehicle(vehicle)}
+                        title="View"
+                      >
+                        <Eye className="h-4 w-4" />
                       </Button>
-                      {!defaultVehicles.find(v => v.id === vehicle.id) && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteVehicle(vehicle.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                      {isCustomVehicle(vehicle.id) && (
+                        <>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleEditVehicle(vehicle)}
+                            title="Edit"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteVehicle(vehicle)}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
                       )}
                     </div>
                   </TableCell>
@@ -229,6 +286,7 @@ export default function AdminVehicles() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Vehicle</DialogTitle>
+            <DialogDescription>Add a new vehicle to your fleet</DialogDescription>
           </DialogHeader>
           <AddVehicleForm 
             onSuccess={() => {
@@ -239,6 +297,133 @@ export default function AdminVehicles() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Edit Vehicle Dialog */}
+      <Dialog open={editVehicleOpen} onOpenChange={setEditVehicleOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Vehicle</DialogTitle>
+            <DialogDescription>Update vehicle information</DialogDescription>
+          </DialogHeader>
+          {selectedVehicle && (
+            <EditVehicleForm 
+              vehicle={selectedVehicle}
+              onSuccess={() => {
+                loadVehicles();
+                setEditVehicleOpen(false);
+                setSelectedVehicle(null);
+              }} 
+              onCancel={() => {
+                setEditVehicleOpen(false);
+                setSelectedVehicle(null);
+              }} 
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Vehicle Dialog */}
+      <Dialog open={viewVehicleOpen} onOpenChange={setViewVehicleOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Vehicle Details</DialogTitle>
+            <DialogDescription>Complete vehicle information</DialogDescription>
+          </DialogHeader>
+          {selectedVehicle && (
+            <div className="space-y-4">
+              <div className="aspect-video rounded-lg overflow-hidden">
+                <img 
+                  src={selectedVehicle.image} 
+                  alt={selectedVehicle.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">{selectedVehicle.brand} {selectedVehicle.name}</h3>
+                  <p className="text-sm text-muted-foreground capitalize">{selectedVehicle.type === 'activa' ? 'Scooter' : selectedVehicle.type}</p>
+                </div>
+                <Badge variant={selectedVehicle.available ? "default" : "secondary"}>
+                  {selectedVehicle.available ? 'Available' : 'Unavailable'}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Price per Day</p>
+                  <p className="font-semibold">₹{selectedVehicle.pricePerDay.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Price per Hour</p>
+                  <p className="font-semibold">₹{selectedVehicle.pricePerHour.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Fuel Type</p>
+                  <p className="font-semibold capitalize">{selectedVehicle.fuelType}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Year</p>
+                  <p className="font-semibold">{selectedVehicle.year}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Mileage</p>
+                  <p className="font-semibold">{selectedVehicle.mileage}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="font-semibold">{selectedVehicle.location}</p>
+                </div>
+                {selectedVehicle.seats && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Seats</p>
+                    <p className="font-semibold">{selectedVehicle.seats}</p>
+                  </div>
+                )}
+                {selectedVehicle.transmission && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Transmission</p>
+                    <p className="font-semibold capitalize">{selectedVehicle.transmission}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-sm text-muted-foreground mb-2">Features</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedVehicle.features.map((feature, index) => (
+                    <Badge key={index} variant="outline">{feature}</Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t pt-4 flex items-center gap-2">
+                <span className="text-yellow-500">★</span>
+                <span className="font-semibold">{selectedVehicle.rating}</span>
+                <span className="text-sm text-muted-foreground">({selectedVehicle.reviewCount} reviews)</span>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Vehicle</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{selectedVehicle?.brand} {selectedVehicle?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSelectedVehicle(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

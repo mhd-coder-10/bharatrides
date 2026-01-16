@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { FileText, Upload, File, Trash2, Download, Search } from 'lucide-react';
+import { FileText, Upload, File, Trash2, Download, Search, Eye, Pencil, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -12,9 +13,44 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { toast } from 'sonner';
+
+interface Document {
+  id: string;
+  name: string;
+  type: string;
+  uploadDate: string;
+  size: string;
+  url?: string;
+}
 
 // Sample documents data
-const sampleDocuments = [
+const initialDocuments: Document[] = [
   { id: '1', name: 'Vehicle Insurance - Swift Dzire', type: 'Insurance', uploadDate: '2024-01-10', size: '2.4 MB' },
   { id: '2', name: 'RC Book - Honda City', type: 'Registration', uploadDate: '2024-01-08', size: '1.8 MB' },
   { id: '3', name: 'Permit - Royal Enfield Classic', type: 'Permit', uploadDate: '2024-01-05', size: '1.2 MB' },
@@ -24,7 +60,21 @@ const sampleDocuments = [
 
 export default function AdminDocuments() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [documents] = useState(sampleDocuments);
+  const [documents, setDocuments] = useState<Document[]>(initialDocuments);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    type: '',
+  });
+  const [addFormData, setAddFormData] = useState({
+    name: '',
+    type: 'Insurance',
+    size: '',
+  });
 
   const filteredDocuments = documents.filter(doc =>
     doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -41,6 +91,69 @@ export default function AdminDocuments() {
     return <Badge className={colors[type] || 'bg-gray-100 text-gray-800'}>{type}</Badge>;
   };
 
+  const handleViewDocument = (doc: Document) => {
+    setSelectedDocument(doc);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleEditDocument = (doc: Document) => {
+    setSelectedDocument(doc);
+    setEditFormData({
+      name: doc.name,
+      type: doc.type,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteDocument = (doc: Document) => {
+    setSelectedDocument(doc);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const saveDocumentEdit = () => {
+    if (!selectedDocument) return;
+    
+    setDocuments(prev => 
+      prev.map(d => d.id === selectedDocument.id ? { 
+        ...d, 
+        name: editFormData.name,
+        type: editFormData.type,
+      } : d)
+    );
+
+    toast.success('Document updated successfully');
+    setIsEditDialogOpen(false);
+    setSelectedDocument(null);
+  };
+
+  const confirmDeleteDocument = () => {
+    if (!selectedDocument) return;
+    
+    setDocuments(prev => prev.filter(d => d.id !== selectedDocument.id));
+    toast.success('Document deleted successfully');
+    setIsDeleteDialogOpen(false);
+    setSelectedDocument(null);
+  };
+
+  const handleAddDocument = () => {
+    const newDoc: Document = {
+      id: Date.now().toString(),
+      name: addFormData.name,
+      type: addFormData.type,
+      uploadDate: new Date().toISOString().split('T')[0],
+      size: addFormData.size || '1.0 MB',
+    };
+
+    setDocuments(prev => [newDoc, ...prev]);
+    toast.success('Document added successfully');
+    setIsAddDialogOpen(false);
+    setAddFormData({ name: '', type: 'Insurance', size: '' });
+  };
+
+  const handleDownload = (doc: Document) => {
+    toast.success(`Downloading ${doc.name}...`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -51,9 +164,9 @@ export default function AdminDocuments() {
             <p className="text-muted-foreground">Manage vehicle and business documents</p>
           </div>
         </div>
-        <Button>
-          <Upload className="h-4 w-4 mr-2" />
-          Upload Document
+        <Button onClick={() => setIsAddDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Document
         </Button>
       </div>
 
@@ -130,11 +243,38 @@ export default function AdminDocuments() {
                   <TableCell className="text-muted-foreground">{doc.uploadDate}</TableCell>
                   <TableCell className="text-muted-foreground">{doc.size}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleViewDocument(doc)}
+                        title="View"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleEditDocument(doc)}
+                        title="Edit"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleDownload(doc)}
+                        title="Download"
+                      >
                         <Download className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteDocument(doc)}
+                        title="Delete"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -155,6 +295,167 @@ export default function AdminDocuments() {
           </CardContent>
         </Card>
       )}
+
+      {/* View Document Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Document Details</DialogTitle>
+            <DialogDescription>
+              View document information
+            </DialogDescription>
+          </DialogHeader>
+          {selectedDocument && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="p-4 rounded-lg bg-muted">
+                  <File className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">{selectedDocument.name}</h3>
+                  {getTypeBadge(selectedDocument.type)}
+                </div>
+              </div>
+
+              <div className="border-t pt-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Upload Date</span>
+                  <span className="font-medium">{selectedDocument.uploadDate}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">File Size</span>
+                  <span className="font-medium">{selectedDocument.size}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Type</span>
+                  <span className="font-medium">{selectedDocument.type}</span>
+                </div>
+              </div>
+
+              <Button className="w-full" onClick={() => handleDownload(selectedDocument)}>
+                <Download className="h-4 w-4 mr-2" />
+                Download Document
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Document Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Document</DialogTitle>
+            <DialogDescription>
+              Update document details
+            </DialogDescription>
+          </DialogHeader>
+          {selectedDocument && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="doc_name">Document Name</Label>
+                <Input
+                  id="doc_name"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="doc_type">Type</Label>
+                <Select 
+                  value={editFormData.type} 
+                  onValueChange={(value) => setEditFormData(prev => ({ ...prev, type: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Insurance">Insurance</SelectItem>
+                    <SelectItem value="Registration">Registration</SelectItem>
+                    <SelectItem value="Permit">Permit</SelectItem>
+                    <SelectItem value="PUC">PUC</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={saveDocumentEdit}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Document Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Document</DialogTitle>
+            <DialogDescription>
+              Add a new document to the system
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="add_doc_name">Document Name</Label>
+              <Input
+                id="add_doc_name"
+                value={addFormData.name}
+                onChange={(e) => setAddFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g., Vehicle Insurance - Swift Dzire"
+              />
+            </div>
+            <div>
+              <Label htmlFor="add_doc_type">Type</Label>
+              <Select 
+                value={addFormData.type} 
+                onValueChange={(value) => setAddFormData(prev => ({ ...prev, type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Insurance">Insurance</SelectItem>
+                  <SelectItem value="Registration">Registration</SelectItem>
+                  <SelectItem value="Permit">Permit</SelectItem>
+                  <SelectItem value="PUC">PUC</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="add_doc_size">File Size</Label>
+              <Input
+                id="add_doc_size"
+                value={addFormData.size}
+                onChange={(e) => setAddFormData(prev => ({ ...prev, size: e.target.value }))}
+                placeholder="e.g., 2.4 MB"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddDocument} disabled={!addFormData.name}>Add Document</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{selectedDocument?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSelectedDocument(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteDocument} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
