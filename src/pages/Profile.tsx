@@ -49,8 +49,8 @@ export default function Profile() {
       setFormData({
         fullName: data?.full_name || user.user_metadata?.full_name || '',
         email: data?.email || user.email || '',
-        phone: '',
-        address: '',
+        phone: data?.phone || '',
+        address: data?.address || '',
       });
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -70,6 +70,8 @@ export default function Profile() {
           user_id: user.id,
           full_name: formData.fullName,
           email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
           updated_at: new Date().toISOString(),
         }, {
           onConflict: 'user_id'
