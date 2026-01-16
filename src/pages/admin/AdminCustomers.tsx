@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Users, Loader2, Mail, Calendar, Eye, Search } from 'lucide-react';
+import { Users, Loader2, Mail, Calendar, Eye, Search, Pencil, Trash2, Phone, MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -18,7 +19,18 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -29,6 +41,8 @@ interface Profile {
   email: string | null;
   full_name: string | null;
   avatar_url: string | null;
+  phone: string | null;
+  address: string | null;
   created_at: string;
 }
 
@@ -47,8 +61,15 @@ export default function AdminCustomers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Profile | null>(null);
   const [customerBookings, setCustomerBookings] = useState<CustomerBooking[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [loadingBookings, setLoadingBookings] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    full_name: '',
+    phone: '',
+    address: '',
+  });
 
   const fetchProfiles = async () => {
     try {
@@ -95,8 +116,77 @@ export default function AdminCustomers() {
 
   const handleViewCustomer = (customer: Profile) => {
     setSelectedCustomer(customer);
-    setIsDialogOpen(true);
+    setIsViewDialogOpen(true);
     fetchCustomerBookings(customer.user_id);
+  };
+
+  const handleEditCustomer = (customer: Profile) => {
+    setSelectedCustomer(customer);
+    setEditFormData({
+      full_name: customer.full_name || '',
+      phone: customer.phone || '',
+      address: customer.address || '',
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteCustomer = (customer: Profile) => {
+    setSelectedCustomer(customer);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const saveCustomerEdit = async () => {
+    if (!selectedCustomer) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editFormData.full_name,
+          phone: editFormData.phone,
+          address: editFormData.address,
+        })
+        .eq('id', selectedCustomer.id);
+
+      if (error) throw error;
+
+      setProfiles(prev => 
+        prev.map(p => p.id === selectedCustomer.id ? { 
+          ...p, 
+          full_name: editFormData.full_name,
+          phone: editFormData.phone,
+          address: editFormData.address,
+        } : p)
+      );
+
+      toast({
+        title: "Customer Updated",
+        description: "Customer details have been updated successfully",
+      });
+
+      setIsEditDialogOpen(false);
+      setSelectedCustomer(null);
+    } catch (error) {
+      console.error('Error updating customer:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update customer",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmDeleteCustomer = async () => {
+    if (!selectedCustomer) return;
+    
+    toast({
+      title: "Cannot Delete",
+      description: "Customer profiles cannot be deleted from here. The user must delete their own account.",
+      variant: "destructive",
+    });
+    
+    setIsDeleteDialogOpen(false);
+    setSelectedCustomer(null);
   };
 
   const getStatusBadge = (status: string) => {
@@ -240,13 +330,33 @@ export default function AdminCustomers() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleViewCustomer(profile)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleViewCustomer(profile)}
+                          title="View"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditCustomer(profile)}
+                          title="Edit"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteCustomer(profile)}
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -256,8 +366,8 @@ export default function AdminCustomers() {
         </Card>
       )}
 
-      {/* Customer Details Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* View Customer Details Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Customer Details</DialogTitle>
@@ -287,9 +397,19 @@ export default function AdminCustomers() {
                 </div>
               </div>
 
-              <div className="border-t pt-4">
-                <p className="text-sm text-muted-foreground mb-1">Member since</p>
-                <p className="font-medium">{format(new Date(selectedCustomer.created_at), 'dd MMMM yyyy')}</p>
+              <div className="border-t pt-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{selectedCustomer.phone || 'Not provided'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{selectedCustomer.address || 'Not provided'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">Member since {format(new Date(selectedCustomer.created_at), 'dd MMMM yyyy')}</span>
+                </div>
               </div>
 
               <div className="border-t pt-4">
@@ -323,6 +443,65 @@ export default function AdminCustomers() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Edit Customer Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Customer</DialogTitle>
+            <DialogDescription>
+              Update customer details
+            </DialogDescription>
+          </DialogHeader>
+          {selectedCustomer && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="full_name">Full Name</Label>
+                <Input
+                  id="full_name"
+                  value={editFormData.full_name}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  value={editFormData.phone}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, phone: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  value={editFormData.address}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, address: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+            <Button onClick={saveCustomerEdit}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Customer</AlertDialogTitle>
+            <AlertDialogDescription>
+              Customer accounts are managed through authentication. You can view and edit customer details, but deletion must be done by the user themselves or through the authentication system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSelectedCustomer(null)}>Close</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
