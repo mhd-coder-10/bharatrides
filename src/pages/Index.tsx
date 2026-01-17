@@ -1,5 +1,6 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { HeroSlider } from '@/components/home/HeroSlider';
 import { HeroSection } from '@/components/home/HeroSection';
 import { CategorySection } from '@/components/home/CategorySection';
 import { FeaturedVehicles } from '@/components/home/FeaturedVehicles';
@@ -12,6 +13,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
+        <HeroSlider />
         <HeroSection />
         <FeaturedVehicles />
         <CategorySection />
