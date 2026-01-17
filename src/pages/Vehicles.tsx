@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -37,6 +37,15 @@ export default function VehiclesPage() {
     searchParams.get('brand') || 'all'
   );
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+
+  // Sync state with URL params when they change (e.g., from header navigation)
+  useEffect(() => {
+    const typeParam = searchParams.get('type') as VehicleType | null;
+    const brandParam = searchParams.get('brand');
+    
+    setVehicleType(typeParam || 'all');
+    setSelectedBrand(brandParam || 'all');
+  }, [searchParams]);
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [selectedFuels, setSelectedFuels] = useState<FuelType[]>([]);
   const [sortBy, setSortBy] = useState<'price-low' | 'price-high' | 'rating'>('rating');
