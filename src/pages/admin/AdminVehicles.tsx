@@ -63,8 +63,19 @@ export default function AdminVehicles() {
   }, []);
 
   const loadVehicles = () => {
+    // Get custom vehicles
     const customVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
-    setAllVehicles([...defaultVehicles, ...customVehicles]);
+    // Get deleted default vehicle IDs
+    const deletedDefaults = JSON.parse(localStorage.getItem('deletedDefaultVehicles') || '[]');
+    // Get edited default vehicles
+    const editedDefaults = JSON.parse(localStorage.getItem('editedDefaultVehicles') || '{}');
+    
+    // Filter out deleted default vehicles and apply edits
+    const activeDefaultVehicles = defaultVehicles
+      .filter(v => !deletedDefaults.includes(v.id))
+      .map(v => editedDefaults[v.id] ? { ...v, ...editedDefaults[v.id] } : v);
+    
+    setAllVehicles([...activeDefaultVehicles, ...customVehicles]);
   };
 
   const handleDeleteVehicle = (vehicle: Vehicle) => {
@@ -75,9 +86,20 @@ export default function AdminVehicles() {
   const confirmDelete = () => {
     if (!selectedVehicle) return;
     
-    const customVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
-    const updatedCustomVehicles = customVehicles.filter((v: Vehicle) => v.id !== selectedVehicle.id);
-    localStorage.setItem('customVehicles', JSON.stringify(updatedCustomVehicles));
+    const isDefault = defaultVehicles.find(v => v.id === selectedVehicle.id);
+    
+    if (isDefault) {
+      // Mark default vehicle as deleted
+      const deletedDefaults = JSON.parse(localStorage.getItem('deletedDefaultVehicles') || '[]');
+      deletedDefaults.push(selectedVehicle.id);
+      localStorage.setItem('deletedDefaultVehicles', JSON.stringify(deletedDefaults));
+    } else {
+      // Remove custom vehicle
+      const customVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
+      const updatedCustomVehicles = customVehicles.filter((v: Vehicle) => v.id !== selectedVehicle.id);
+      localStorage.setItem('customVehicles', JSON.stringify(updatedCustomVehicles));
+    }
+    
     loadVehicles();
     setDeleteDialogOpen(false);
     setSelectedVehicle(null);
@@ -94,8 +116,8 @@ export default function AdminVehicles() {
     setViewVehicleOpen(true);
   };
 
-  const isCustomVehicle = (vehicleId: string) => {
-    return !defaultVehicles.find(v => v.id === vehicleId);
+  const isDefaultVehicle = (vehicleId: string) => {
+    return !!defaultVehicles.find(v => v.id === vehicleId);
   };
 
   const filteredVehicles = allVehicles.filter(vehicle => {
