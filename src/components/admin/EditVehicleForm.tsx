@@ -24,6 +24,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Car, Bike, Upload, Loader2 } from 'lucide-react';
 import { Vehicle } from '@/types/vehicle';
+import { vehicles as defaultVehicles } from '@/data/vehicles';
 
 const vehicleSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
@@ -87,12 +88,21 @@ export default function EditVehicleForm({ vehicle, onSuccess, onCancel }: EditVe
         features: featuresArray,
       };
       
-      // Update in localStorage
-      const existingVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
-      const updatedVehicles = existingVehicles.map((v: Vehicle) => 
-        v.id === vehicle.id ? updatedVehicle : v
-      );
-      localStorage.setItem('customVehicles', JSON.stringify(updatedVehicles));
+      const isDefault = defaultVehicles.find(v => v.id === vehicle.id);
+      
+      if (isDefault) {
+        // Store edits for default vehicles separately
+        const editedDefaults = JSON.parse(localStorage.getItem('editedDefaultVehicles') || '{}');
+        editedDefaults[vehicle.id] = updatedVehicle;
+        localStorage.setItem('editedDefaultVehicles', JSON.stringify(editedDefaults));
+      } else {
+        // Update custom vehicle in localStorage
+        const existingVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
+        const updatedVehicles = existingVehicles.map((v: Vehicle) => 
+          v.id === vehicle.id ? updatedVehicle : v
+        );
+        localStorage.setItem('customVehicles', JSON.stringify(updatedVehicles));
+      }
       
       toast.success('Vehicle updated successfully!', {
         description: `${data.brand} ${data.name} has been updated.`,
