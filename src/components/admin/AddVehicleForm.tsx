@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -23,13 +22,13 @@ import {
 } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Car, Bike, Upload } from 'lucide-react';
+import { Car, Bike, Loader2 } from 'lucide-react';
+import VehicleImageUpload from './VehicleImageUpload';
 
 const vehicleSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
   brand: z.string().min(2, 'Brand must be at least 2 characters').max(50),
   type: z.enum(['car', 'bike']),
-  image: z.string().url('Please enter a valid image URL'),
   pricePerDay: z.coerce.number().min(100, 'Minimum ₹100 per day'),
   pricePerHour: z.coerce.number().min(10, 'Minimum ₹10 per hour'),
   seats: z.coerce.number().min(1).max(10).optional(),
@@ -51,6 +50,7 @@ interface AddVehicleFormProps {
 
 export default function AddVehicleForm({ onSuccess, onCancel }: AddVehicleFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleSchema),
@@ -58,7 +58,6 @@ export default function AddVehicleForm({ onSuccess, onCancel }: AddVehicleFormPr
       name: '',
       brand: '',
       type: 'car',
-      image: '',
       pricePerDay: 1000,
       pricePerHour: 100,
       seats: 5,
@@ -75,6 +74,11 @@ export default function AddVehicleForm({ onSuccess, onCancel }: AddVehicleFormPr
   const vehicleType = form.watch('type');
 
   const onSubmit = async (data: VehicleFormData) => {
+    if (uploadedImages.length === 0) {
+      toast.error('Please upload at least one image');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -84,6 +88,8 @@ export default function AddVehicleForm({ onSuccess, onCancel }: AddVehicleFormPr
       const newVehicle = {
         id: Date.now().toString(),
         ...data,
+        image: uploadedImages[0], // Main image
+        images: uploadedImages, // All images
         features: featuresArray,
         rating: 5.0,
         reviewCount: 0,
@@ -98,6 +104,7 @@ export default function AddVehicleForm({ onSuccess, onCancel }: AddVehicleFormPr
       });
       
       form.reset();
+      setUploadedImages([]);
       onSuccess?.();
     } catch (error) {
       toast.error('Failed to add vehicle', {
@@ -174,22 +181,11 @@ export default function AddVehicleForm({ onSuccess, onCancel }: AddVehicleFormPr
           />
         </div>
 
-        {/* Image URL */}
-        <FormField
-          control={form.control}
-          name="image"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Image URL</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input placeholder="https://example.com/vehicle-image.jpg" {...field} />
-                  <Upload className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        {/* Image Upload */}
+        <VehicleImageUpload
+          images={uploadedImages}
+          onImagesChange={setUploadedImages}
+          maxImages={5}
         />
 
         {/* Pricing */}
@@ -384,7 +380,14 @@ export default function AddVehicleForm({ onSuccess, onCancel }: AddVehicleFormPr
             </Button>
           )}
           <Button type="submit" className="flex-1" disabled={isSubmitting}>
-            {isSubmitting ? 'Adding Vehicle...' : 'Add Vehicle'}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Adding Vehicle...
+              </>
+            ) : (
+              'Add Vehicle'
+            )}
           </Button>
         </div>
       </form>
