@@ -174,7 +174,7 @@ export default function AdminVehicles() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-2xl font-bold text-purple-600">{stats.activas}</div>
-            <p className="text-sm text-muted-foreground">Scooters</p>
+            <p className="text-sm text-muted-foreground">Activa</p>
           </CardContent>
         </Card>
         <Card>
@@ -205,7 +205,7 @@ export default function AdminVehicles() {
             <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="car">Cars</SelectItem>
             <SelectItem value="bike">Bikes</SelectItem>
-            <SelectItem value="activa">Scooters</SelectItem>
+            <SelectItem value="activa">Activa</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -243,7 +243,7 @@ export default function AdminVehicles() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
-                      {vehicle.type === 'activa' ? 'Scooter' : vehicle.type}
+                      {vehicle.type === 'activa' ? 'Activa' : vehicle.type}
                     </Badge>
                   </TableCell>
                   <TableCell>₹{vehicle.pricePerDay.toLocaleString()}</TableCell>
@@ -364,7 +364,7 @@ export default function AdminVehicles() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold">{selectedVehicle.brand} {selectedVehicle.name}</h3>
-                  <p className="text-sm text-muted-foreground capitalize">{selectedVehicle.type === 'activa' ? 'Scooter' : selectedVehicle.type}</p>
+                  <p className="text-sm text-muted-foreground capitalize">{selectedVehicle.type === 'activa' ? 'Activa' : selectedVehicle.type}</p>
                 </div>
                 <Badge variant={selectedVehicle.available ? "default" : "secondary"}>
                   {selectedVehicle.available ? 'Available' : 'Unavailable'}
