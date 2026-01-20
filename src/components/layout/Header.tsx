@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Car, Bike, User, Phone, LogOut, Shield, CalendarCheck, MessageSquare, ChevronDown, Settings } from 'lucide-react';
+import { Menu, X, Car, Bike, User, LogOut, Shield, CalendarCheck, MessageSquare, ChevronDown, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -68,10 +68,6 @@ export function Header() {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
-          <a href="tel:+919876543210" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <Phone className="h-4 w-4" />
-            +91 98765 43210
-          </a>
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
