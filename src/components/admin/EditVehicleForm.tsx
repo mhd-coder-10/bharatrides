@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,15 +22,15 @@ import {
 } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Car, Bike, Upload, Loader2 } from 'lucide-react';
+import { Car, Bike, Loader2 } from 'lucide-react';
 import { Vehicle } from '@/types/vehicle';
 import { vehicles as defaultVehicles } from '@/data/vehicles';
+import VehicleImageUpload from './VehicleImageUpload';
 
 const vehicleSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
   brand: z.string().min(2, 'Brand must be at least 2 characters').max(50),
   type: z.enum(['car', 'bike', 'activa']),
-  image: z.string().url('Please enter a valid image URL'),
   pricePerDay: z.coerce.number().min(100, 'Minimum ₹100 per day'),
   pricePerHour: z.coerce.number().min(10, 'Minimum ₹10 per hour'),
   seats: z.coerce.number().min(1).max(10).optional(),
@@ -53,6 +53,9 @@ interface EditVehicleFormProps {
 
 export default function EditVehicleForm({ vehicle, onSuccess, onCancel }: EditVehicleFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>(
+    (vehicle as any).images || [vehicle.image]
+  );
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleSchema),
@@ -60,7 +63,6 @@ export default function EditVehicleForm({ vehicle, onSuccess, onCancel }: EditVe
       name: vehicle.name,
       brand: vehicle.brand,
       type: vehicle.type,
-      image: vehicle.image,
       pricePerDay: vehicle.pricePerDay,
       pricePerHour: vehicle.pricePerHour,
       seats: vehicle.seats || 5,
@@ -77,6 +79,11 @@ export default function EditVehicleForm({ vehicle, onSuccess, onCancel }: EditVe
   const vehicleType = form.watch('type');
 
   const onSubmit = async (data: VehicleFormData) => {
+    if (uploadedImages.length === 0) {
+      toast.error('Please upload at least one image');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
@@ -85,6 +92,8 @@ export default function EditVehicleForm({ vehicle, onSuccess, onCancel }: EditVe
       const updatedVehicle = {
         ...vehicle,
         ...data,
+        image: uploadedImages[0], // Main image
+        images: uploadedImages, // All images
         features: featuresArray,
       };
       
@@ -184,22 +193,11 @@ export default function EditVehicleForm({ vehicle, onSuccess, onCancel }: EditVe
           />
         </div>
 
-        {/* Image URL */}
-        <FormField
-          control={form.control}
-          name="image"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Image URL</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input placeholder="https://example.com/vehicle-image.jpg" {...field} />
-                  <Upload className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        {/* Image Upload */}
+        <VehicleImageUpload
+          images={uploadedImages}
+          onImagesChange={setUploadedImages}
+          maxImages={5}
         />
 
         {/* Pricing */}
