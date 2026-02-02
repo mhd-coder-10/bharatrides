@@ -42,6 +42,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { vehicles as defaultVehicles } from '@/data/vehicles';
 import AddVehicleForm from '@/components/admin/AddVehicleForm';
 import EditVehicleForm from '@/components/admin/EditVehicleForm';
@@ -346,12 +347,13 @@ export default function AdminVehicles() {
 
       {/* View Vehicle Dialog */}
       <Dialog open={viewVehicleOpen} onOpenChange={setViewVehicleOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh]">
           <DialogHeader>
             <DialogTitle>Vehicle Details</DialogTitle>
             <DialogDescription>Complete vehicle information</DialogDescription>
           </DialogHeader>
           {selectedVehicle && (
+            <ScrollArea className="max-h-[calc(85vh-120px)] pr-4">
             <div className="space-y-4">
               <div className="aspect-video rounded-lg overflow-hidden">
                 <img 
@@ -425,6 +427,7 @@ export default function AdminVehicles() {
                 <span className="text-sm text-muted-foreground">({selectedVehicle.reviewCount} reviews)</span>
               </div>
             </div>
+            </ScrollArea>
           )}
         </DialogContent>
       </Dialog>
