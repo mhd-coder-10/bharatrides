@@ -3,7 +3,7 @@ import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Car, Menu, X, Search, Bell, LogOut, Home, Settings,
+  Car, Menu, X, Search, LogOut, Home, Settings,
   Calendar, Users, CircleDollarSign, BarChart3, FileText,
   User, MessageSquare
 } from 'lucide-react';
@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import NotificationPopover from '@/components/admin/NotificationPopover';
 
 const navItems = [
   { icon: Home, label: 'Dashboard', href: '/admin' },
@@ -150,10 +151,7 @@ export default function AdminLayout() {
                 className="pl-10 w-64"
               />
             </div>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
-            </Button>
+            <NotificationPopover />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold cursor-pointer hover:opacity-90 transition-opacity">
