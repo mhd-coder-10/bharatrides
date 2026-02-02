@@ -26,6 +26,7 @@ import { Car, Bike, Loader2 } from 'lucide-react';
 import { Vehicle } from '@/types/vehicle';
 import { vehicles as defaultVehicles } from '@/data/vehicles';
 import VehicleImageUpload from './VehicleImageUpload';
+import { createVehicleNotification } from '@/lib/vehicleNotifications';
 
 const vehicleSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
@@ -112,6 +113,9 @@ export default function EditVehicleForm({ vehicle, onSuccess, onCancel }: EditVe
         );
         localStorage.setItem('customVehicles', JSON.stringify(updatedVehicles));
       }
+      
+      // Create notification for vehicle update
+      await createVehicleNotification(data.name, data.brand, 'updated');
       
       toast.success('Vehicle updated successfully!', {
         description: `${data.brand} ${data.name} has been updated.`,

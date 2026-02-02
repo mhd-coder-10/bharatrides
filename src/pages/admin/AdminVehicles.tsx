@@ -48,6 +48,7 @@ import AddVehicleForm from '@/components/admin/AddVehicleForm';
 import EditVehicleForm from '@/components/admin/EditVehicleForm';
 import { Vehicle } from '@/types/vehicle';
 import { toast } from 'sonner';
+import { createVehicleNotification } from '@/lib/vehicleNotifications';
 
 export default function AdminVehicles() {
   const [allVehicles, setAllVehicles] = useState<Vehicle[]>([]);
@@ -84,7 +85,7 @@ export default function AdminVehicles() {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!selectedVehicle) return;
     
     const isDefault = defaultVehicles.find(v => v.id === selectedVehicle.id);
@@ -100,6 +101,9 @@ export default function AdminVehicles() {
       const updatedCustomVehicles = customVehicles.filter((v: Vehicle) => v.id !== selectedVehicle.id);
       localStorage.setItem('customVehicles', JSON.stringify(updatedCustomVehicles));
     }
+    
+    // Create notification for vehicle deletion
+    await createVehicleNotification(selectedVehicle.name, selectedVehicle.brand, 'deleted');
     
     loadVehicles();
     setDeleteDialogOpen(false);

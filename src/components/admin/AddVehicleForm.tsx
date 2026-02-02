@@ -24,6 +24,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { Car, Bike, Loader2 } from 'lucide-react';
 import VehicleImageUpload from './VehicleImageUpload';
+import { createVehicleNotification } from '@/lib/vehicleNotifications';
 
 const vehicleSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
@@ -98,6 +99,9 @@ export default function AddVehicleForm({ onSuccess, onCancel }: AddVehicleFormPr
       // For now, we'll store in localStorage (will be replaced with database later)
       const existingVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
       localStorage.setItem('customVehicles', JSON.stringify([...existingVehicles, newVehicle]));
+      
+      // Create notification for vehicle addition
+      await createVehicleNotification(data.name, data.brand, 'added');
       
       toast.success('Vehicle added successfully!', {
         description: `${data.brand} ${data.name} has been added to your fleet.`,
