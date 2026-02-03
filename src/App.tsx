@@ -17,6 +17,17 @@ import MyBookings from "./pages/MyBookings";
 import MyMessages from "./pages/MyMessages";
 import Profile from "./pages/Profile";
 
+// Static pages
+import Careers from "./pages/Careers";
+import Blog from "./pages/Blog";
+import Press from "./pages/Press";
+import Help from "./pages/Help";
+import FAQs from "./pages/FAQs";
+import CancellationPolicy from "./pages/CancellationPolicy";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Refund from "./pages/Refund";
+
 // Admin pages
 import AdminLayout from "./components/layout/AdminLayout";
 import AdminDashboardContent from "./pages/admin/AdminDashboardContent";
@@ -44,6 +55,17 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
+            
+            {/* Static pages */}
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/press" element={<Press />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/faqs" element={<FAQs />} />
+            <Route path="/policies/cancellation" element={<CancellationPolicy />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/refund" element={<Refund />} />
             
             {/* User routes */}
             <Route path="/my-bookings" element={<MyBookings />} />
