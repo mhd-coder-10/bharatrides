@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { VehicleCard } from '@/components/vehicles/VehicleCard';
-import { vehicles } from '@/data/vehicles';
+import { vehicles as defaultVehicles } from '@/data/vehicles';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,14 +21,33 @@ import { VehicleType, FuelType, Vehicle } from '@/types/vehicle';
 
 const fuelTypes: FuelType[] = ['petrol', 'diesel', 'electric', 'cng'];
 
-// Get unique brands from vehicles
-const brands = [...new Set(vehicles.map(v => v.brand))];
-
 type ViewMode = 'grid' | 'list';
 type GridColumns = 2 | 3 | 4;
 
+// Helper function to load all vehicles including custom ones from localStorage
+const loadAllVehicles = (): Vehicle[] => {
+  const customVehicles = JSON.parse(localStorage.getItem('customVehicles') || '[]');
+  const deletedDefaults = JSON.parse(localStorage.getItem('deletedDefaultVehicles') || '[]');
+  const editedDefaults = JSON.parse(localStorage.getItem('editedDefaultVehicles') || '{}');
+  
+  const activeDefaultVehicles = defaultVehicles
+    .filter(v => !deletedDefaults.includes(v.id))
+    .map(v => editedDefaults[v.id] ? { ...v, ...editedDefaults[v.id] } : v);
+  
+  return [...activeDefaultVehicles, ...customVehicles];
+};
+
 export default function VehiclesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [allVehicles, setAllVehicles] = useState<Vehicle[]>([]);
+  
+  // Load vehicles on mount
+  useEffect(() => {
+    setAllVehicles(loadAllVehicles());
+  }, []);
+
+  // Get unique brands from loaded vehicles
+  const brands = useMemo(() => [...new Set(allVehicles.map(v => v.brand))], [allVehicles]);
   
   const [vehicleType, setVehicleType] = useState<VehicleType | 'all'>(
     (searchParams.get('type') as VehicleType) || 'all'
@@ -54,11 +73,11 @@ export default function VehiclesPage() {
   const [filtersOpen, setFiltersOpen] = useState(true);
 
   const filteredVehicles = useMemo(() => {
-    let result = [...vehicles];
+    let result = [...allVehicles];
 
-    // Filter by type
+    // STRICT type filtering - only exact matches
     if (vehicleType !== 'all') {
-      result = result.filter(v => v.type === vehicleType);
+      result = result.filter(v => v.type.toLowerCase() === vehicleType.toLowerCase());
     }
 
     // Filter by brand
@@ -100,7 +119,7 @@ export default function VehiclesPage() {
     }
 
     return result;
-  }, [vehicleType, selectedBrand, searchQuery, priceRange, selectedFuels, sortBy]);
+  }, [allVehicles, vehicleType, selectedBrand, searchQuery, priceRange, selectedFuels, sortBy]);
 
   const handleTypeChange = (type: VehicleType | 'all') => {
     setVehicleType(type);
