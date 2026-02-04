@@ -49,21 +49,31 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              to={link.href}
-              className={cn(
-                "px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
-                location.pathname === link.href || 
-                (link.href !== '/' && location.pathname.startsWith(link.href.split('?')[0]))
-                  ? "text-foreground bg-muted"
-                  : "text-muted-foreground"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const [linkPath, linkQuery] = link.href.split('?');
+            const linkParams = new URLSearchParams(linkQuery || '');
+            const currentParams = new URLSearchParams(location.search);
+            
+            // Check if this link is active
+            const isActive = link.href === '/' 
+              ? location.pathname === '/'
+              : linkQuery
+                ? location.pathname === linkPath && linkParams.get('type') === currentParams.get('type')
+                : location.pathname === linkPath;
+            
+            return (
+              <Link
+                key={link.href}
+                to={link.href}
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-muted",
+                  isActive ? "text-foreground bg-muted" : "text-muted-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Desktop Actions */}
