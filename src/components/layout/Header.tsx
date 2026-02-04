@@ -51,15 +51,23 @@ export function Header() {
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => {
             const [linkPath, linkQuery] = link.href.split('?');
-            const linkParams = new URLSearchParams(linkQuery || '');
-            const currentParams = new URLSearchParams(location.search);
+            const linkTypeParam = linkQuery ? new URLSearchParams(linkQuery).get('type') : null;
+            const currentTypeParam = new URLSearchParams(location.search).get('type');
             
-            // Check if this link is active
-            const isActive = link.href === '/' 
-              ? location.pathname === '/'
-              : linkQuery
-                ? location.pathname === linkPath && linkParams.get('type') === currentParams.get('type')
-                : location.pathname === linkPath;
+            // Strict active state: only one category can be active at a time
+            let isActive = false;
+            
+            if (link.href === '/') {
+              // Home is only active on exact root path with no type param
+              isActive = location.pathname === '/' && !currentTypeParam;
+            } else if (linkTypeParam) {
+              // Category links (Cars, Bikes, Activa) - must match BOTH path AND type
+              isActive = location.pathname === linkPath && 
+                         linkTypeParam.toLowerCase() === currentTypeParam?.toLowerCase();
+            } else {
+              // Regular links (About, Contact) - only active when path matches and no type param
+              isActive = location.pathname === linkPath && !currentTypeParam;
+            }
             
             return (
               <Link
