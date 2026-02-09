@@ -41,6 +41,8 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { vehicles as defaultVehicles } from '@/data/vehicles';
+import { vehicleImages } from '@/data/vehicleImages';
 
 interface Booking {
   id: string;
@@ -439,8 +441,21 @@ export default function AdminBookings() {
               Complete information about this booking
             </DialogDescription>
           </DialogHeader>
-          {selectedBooking && (
+          {selectedBooking && (() => {
+            const matchedVehicle = defaultVehicles.find(v => v.id === selectedBooking.vehicle_id) 
+              || defaultVehicles.find(v => v.name === selectedBooking.vehicle_name);
+            const vehicleImage = matchedVehicle?.image || vehicleImages[selectedBooking.vehicle_id];
+            return (
             <div className="space-y-4">
+              {vehicleImage && (
+                <div className="rounded-lg overflow-hidden aspect-[16/10]">
+                  <img 
+                    src={vehicleImage} 
+                    alt={selectedBooking.vehicle_name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {selectedBooking.vehicle_type === 'car' ? (
@@ -511,7 +526,8 @@ export default function AdminBookings() {
                 </Select>
               </div>
             </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
