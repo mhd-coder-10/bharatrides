@@ -137,6 +137,9 @@ export default function VehiclesPage() {
       searchParams.delete('brand');
     } else {
       searchParams.set('brand', brand);
+      // Reset type filter to show all vehicles for the selected brand
+      setVehicleType('all');
+      searchParams.delete('type');
     }
     setSearchParams(searchParams);
   };
