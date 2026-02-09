@@ -133,15 +133,16 @@ export default function VehiclesPage() {
 
   const handleBrandChange = (brand: string | 'all') => {
     setSelectedBrand(brand);
+    const newParams = new URLSearchParams(searchParams);
     if (brand === 'all') {
-      searchParams.delete('brand');
+      newParams.delete('brand');
     } else {
-      searchParams.set('brand', brand);
+      newParams.set('brand', brand);
       // Reset type filter to show all vehicles for the selected brand
       setVehicleType('all');
-      searchParams.delete('type');
+      newParams.delete('type');
     }
-    setSearchParams(searchParams);
+    setSearchParams(newParams);
   };
 
   const toggleFuel = (fuel: FuelType) => {
