@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X, Car, Bike, User, LogOut, Shield, CalendarCheck, MessageSquare, ChevronDown, Settings } from 'lucide-react';
+import logoImg from '@/assets/bharat-rides-logo.png';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -38,13 +39,8 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <Car className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold text-foreground">
-            Bharat<span className="text-secondary">Rides</span>
-          </span>
+        <Link to="/" className="flex items-center">
+          <img src={logoImg} alt="BharatRides" className="h-10" />
         </Link>
 
         {/* Desktop Navigation */}

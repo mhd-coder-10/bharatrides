@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Car, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
+import logoImg from '@/assets/bharat-rides-logo.png';
 
 const footerLinks = {
   company: [
@@ -43,12 +44,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-                <Car className="h-6 w-6 text-secondary-foreground" />
-              </div>
-              <span className="text-xl font-bold">
-                Bharat<span className="text-secondary">Rides</span>
-              </span>
+              <img src={logoImg} alt="BharatRides" className="h-10 brightness-0 invert" />
             </Link>
             <p className="text-primary-foreground/70 text-sm mb-6 max-w-xs">
               India's trusted vehicle rental service. Quality cars and bikes at affordable prices. Drive your dreams with us.
