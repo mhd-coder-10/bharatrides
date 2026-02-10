@@ -40,7 +40,7 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center">
-          <img src={logoImg} alt="BharatRides" className="h-12 w-auto object-contain" />
+          <img src={logoImg} alt="BharatRides" className="h-14 w-auto object-contain" />
         </Link>
 
         {/* Desktop Navigation */}
