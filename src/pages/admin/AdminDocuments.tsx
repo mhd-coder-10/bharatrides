@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Upload, File, Trash2, Download, Search, Eye, Pencil, Plus } from 'lucide-react';
+import { FileText, Upload, File, Trash2, Download, Search, Eye, Pencil, Plus, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,22 +40,29 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 
+import swiftDzire from '@/assets/vehicles/swift-dzire.jpg';
+import hondaCity from '@/assets/vehicles/honda-city.jpg';
+import royalEnfield from '@/assets/vehicles/royal-enfield-classic-350.jpg';
+import hyundaiCreta from '@/assets/vehicles/hyundai-creta.jpg';
+import hondaActiva from '@/assets/vehicles/honda-activa-6g.jpg';
+
 interface Document {
   id: string;
   name: string;
   type: string;
   uploadDate: string;
   size: string;
-  url?: string;
+  vehicleImage?: string;
+  vehicleName?: string;
 }
 
-// Sample documents data
+// Sample documents data with matched vehicle images
 const initialDocuments: Document[] = [
-  { id: '1', name: 'Vehicle Insurance - Swift Dzire', type: 'Insurance', uploadDate: '2024-01-10', size: '2.4 MB' },
-  { id: '2', name: 'RC Book - Honda City', type: 'Registration', uploadDate: '2024-01-08', size: '1.8 MB' },
-  { id: '3', name: 'Permit - Royal Enfield Classic', type: 'Permit', uploadDate: '2024-01-05', size: '1.2 MB' },
-  { id: '4', name: 'Insurance Policy - Fleet', type: 'Insurance', uploadDate: '2024-01-02', size: '5.6 MB' },
-  { id: '5', name: 'PUC Certificate - Hyundai Creta', type: 'PUC', uploadDate: '2023-12-28', size: '0.8 MB' },
+  { id: '1', name: 'Vehicle Insurance - Swift Dzire', type: 'Insurance', uploadDate: '2024-01-10', size: '2.4 MB', vehicleImage: swiftDzire, vehicleName: 'Swift Dzire' },
+  { id: '2', name: 'RC Book - Honda City', type: 'Registration', uploadDate: '2024-01-08', size: '1.8 MB', vehicleImage: hondaCity, vehicleName: 'Honda City' },
+  { id: '3', name: 'Permit - Royal Enfield Classic', type: 'Permit', uploadDate: '2024-01-05', size: '1.2 MB', vehicleImage: royalEnfield, vehicleName: 'Royal Enfield Classic 350' },
+  { id: '4', name: 'Insurance Policy - Honda Activa', type: 'Insurance', uploadDate: '2024-01-02', size: '5.6 MB', vehicleImage: hondaActiva, vehicleName: 'Honda Activa 6G' },
+  { id: '5', name: 'PUC Certificate - Hyundai Creta', type: 'PUC', uploadDate: '2023-12-28', size: '0.8 MB', vehicleImage: hyundaiCreta, vehicleName: 'Hyundai Creta' },
 ];
 
 export default function AdminDocuments() {
@@ -151,6 +158,21 @@ export default function AdminDocuments() {
   };
 
   const handleDownload = (doc: Document) => {
+    // Create a downloadable file from the document image or a text summary
+    const link = document.createElement('a');
+    if (doc.vehicleImage) {
+      link.href = doc.vehicleImage;
+      link.download = `${doc.name.replace(/\s+/g, '_')}.jpg`;
+    } else {
+      // Generate a text file with document details as fallback
+      const content = `Document: ${doc.name}\nType: ${doc.type}\nUpload Date: ${doc.uploadDate}\nSize: ${doc.size}`;
+      const blob = new Blob([content], { type: 'text/plain' });
+      link.href = URL.createObjectURL(blob);
+      link.download = `${doc.name.replace(/\s+/g, '_')}.txt`;
+    }
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     toast.success(`Downloading ${doc.name}...`);
   };
 
@@ -298,7 +320,7 @@ export default function AdminDocuments() {
 
       {/* View Document Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Document Details</DialogTitle>
             <DialogDescription>
@@ -307,15 +329,37 @@ export default function AdminDocuments() {
           </DialogHeader>
           {selectedDocument && (
             <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="p-4 rounded-lg bg-muted">
-                  <File className="h-8 w-8 text-muted-foreground" />
+              {/* Document Image */}
+              {selectedDocument.vehicleImage ? (
+                <div className="rounded-lg overflow-hidden border border-border">
+                  <img
+                    src={selectedDocument.vehicleImage}
+                    alt={selectedDocument.vehicleName || selectedDocument.name}
+                    className="w-full h-56 object-cover"
+                  />
                 </div>
+              ) : (
+                <div className="rounded-lg bg-muted flex items-center justify-center h-40 border border-border">
+                  <div className="text-center text-muted-foreground">
+                    <ImageIcon className="h-10 w-10 mx-auto mb-2" />
+                    <p className="text-sm">No image available</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3">
                 <div>
-                  <h3 className="font-semibold">{selectedDocument.name}</h3>
-                  {getTypeBadge(selectedDocument.type)}
+                  <h3 className="font-semibold text-lg">{selectedDocument.name}</h3>
+                  <div className="mt-1">{getTypeBadge(selectedDocument.type)}</div>
                 </div>
               </div>
+
+              {selectedDocument.vehicleName && (
+                <div className="flex justify-between rounded-lg bg-muted p-3">
+                  <span className="text-muted-foreground">Vehicle</span>
+                  <span className="font-medium">{selectedDocument.vehicleName}</span>
+                </div>
+              )}
 
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between">
@@ -327,8 +371,12 @@ export default function AdminDocuments() {
                   <span className="font-medium">{selectedDocument.size}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type</span>
+                  <span className="text-muted-foreground">Document Type</span>
                   <span className="font-medium">{selectedDocument.type}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Document ID</span>
+                  <span className="font-medium">#{selectedDocument.id}</span>
                 </div>
               </div>
 
