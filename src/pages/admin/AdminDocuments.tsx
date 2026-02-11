@@ -76,11 +76,13 @@ export default function AdminDocuments() {
   const [editFormData, setEditFormData] = useState({
     name: '',
     type: '',
+    imagePreview: '' as string,
   });
   const [addFormData, setAddFormData] = useState({
     name: '',
     type: 'Insurance',
     size: '',
+    imagePreview: '' as string,
   });
 
   const filteredDocuments = documents.filter(doc =>
@@ -108,6 +110,7 @@ export default function AdminDocuments() {
     setEditFormData({
       name: doc.name,
       type: doc.type,
+      imagePreview: doc.vehicleImage || '',
     });
     setIsEditDialogOpen(true);
   };
@@ -125,6 +128,7 @@ export default function AdminDocuments() {
         ...d, 
         name: editFormData.name,
         type: editFormData.type,
+        vehicleImage: editFormData.imagePreview || d.vehicleImage,
       } : d)
     );
 
@@ -149,12 +153,28 @@ export default function AdminDocuments() {
       type: addFormData.type,
       uploadDate: new Date().toISOString().split('T')[0],
       size: addFormData.size || '1.0 MB',
+      vehicleImage: addFormData.imagePreview || undefined,
     };
 
     setDocuments(prev => [newDoc, ...prev]);
     toast.success('Document added successfully');
     setIsAddDialogOpen(false);
-    setAddFormData({ name: '', type: 'Insurance', size: '' });
+    setAddFormData({ name: '', type: 'Insurance', size: '', imagePreview: '' });
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, target: 'add' | 'edit') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      if (target === 'add') {
+        setAddFormData(prev => ({ ...prev, imagePreview: result }));
+      } else {
+        setEditFormData(prev => ({ ...prev, imagePreview: result }));
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDownload = (doc: Document) => {
@@ -425,6 +445,18 @@ export default function AdminDocuments() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label>Document Image</Label>
+                {editFormData.imagePreview && (
+                  <img src={editFormData.imagePreview} alt="Preview" className="w-full h-32 object-cover rounded-lg mb-2 border border-border" />
+                )}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, 'edit')}
+                  className="cursor-pointer"
+                />
+              </div>
             </div>
           )}
           <DialogFooter>
@@ -477,6 +509,18 @@ export default function AdminDocuments() {
                 value={addFormData.size}
                 onChange={(e) => setAddFormData(prev => ({ ...prev, size: e.target.value }))}
                 placeholder="e.g., 2.4 MB"
+              />
+            </div>
+            <div>
+              <Label>Document Image</Label>
+              {addFormData.imagePreview && (
+                <img src={addFormData.imagePreview} alt="Preview" className="w-full h-32 object-cover rounded-lg mb-2 border border-border" />
+              )}
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e, 'add')}
+                className="cursor-pointer"
               />
             </div>
           </div>
