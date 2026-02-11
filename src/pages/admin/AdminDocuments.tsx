@@ -54,6 +54,7 @@ interface Document {
   size: string;
   vehicleImage?: string;
   vehicleName?: string;
+  documentImage?: string;
 }
 
 // Sample documents data with matched vehicle images
@@ -83,6 +84,7 @@ export default function AdminDocuments() {
     type: 'Insurance',
     size: '',
     imagePreview: '' as string,
+    documentImagePreview: '' as string,
   });
 
   const filteredDocuments = documents.filter(doc =>
@@ -154,22 +156,27 @@ export default function AdminDocuments() {
       uploadDate: new Date().toISOString().split('T')[0],
       size: addFormData.size || '1.0 MB',
       vehicleImage: addFormData.imagePreview || undefined,
+      documentImage: addFormData.documentImagePreview || undefined,
     };
 
     setDocuments(prev => [newDoc, ...prev]);
     toast.success('Document added successfully');
     setIsAddDialogOpen(false);
-    setAddFormData({ name: '', type: 'Insurance', size: '', imagePreview: '' });
+    setAddFormData({ name: '', type: 'Insurance', size: '', imagePreview: '', documentImagePreview: '' });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, target: 'add' | 'edit') => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, target: 'add' | 'edit', field: 'vehicle' | 'document' = 'vehicle') => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onloadend = () => {
       const result = reader.result as string;
       if (target === 'add') {
-        setAddFormData(prev => ({ ...prev, imagePreview: result }));
+        if (field === 'vehicle') {
+          setAddFormData(prev => ({ ...prev, imagePreview: result }));
+        } else {
+          setAddFormData(prev => ({ ...prev, documentImagePreview: result }));
+        }
       } else {
         setEditFormData(prev => ({ ...prev, imagePreview: result }));
       }
@@ -446,14 +453,14 @@ export default function AdminDocuments() {
                 </Select>
               </div>
               <div>
-                <Label>Document Image</Label>
+                <Label>Vehicle Image</Label>
                 {editFormData.imagePreview && (
                   <img src={editFormData.imagePreview} alt="Preview" className="w-full h-32 object-cover rounded-lg mb-2 border border-border" />
                 )}
                 <Input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleImageUpload(e, 'edit')}
+                  onChange={(e) => handleImageUpload(e, 'edit', 'vehicle')}
                   className="cursor-pointer"
                 />
               </div>
@@ -512,14 +519,26 @@ export default function AdminDocuments() {
               />
             </div>
             <div>
-              <Label>Document Image</Label>
+              <Label>Vehicle Image</Label>
               {addFormData.imagePreview && (
-                <img src={addFormData.imagePreview} alt="Preview" className="w-full h-32 object-cover rounded-lg mb-2 border border-border" />
+                <img src={addFormData.imagePreview} alt="Vehicle Preview" className="w-full h-32 object-cover rounded-lg mb-2 border border-border" />
               )}
               <Input
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleImageUpload(e, 'add')}
+                onChange={(e) => handleImageUpload(e, 'add', 'vehicle')}
+                className="cursor-pointer"
+              />
+            </div>
+            <div>
+              <Label>Document Image</Label>
+              {addFormData.documentImagePreview && (
+                <img src={addFormData.documentImagePreview} alt="Document Preview" className="w-full h-32 object-cover rounded-lg mb-2 border border-border" />
+              )}
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e, 'add', 'document')}
                 className="cursor-pointer"
               />
             </div>
