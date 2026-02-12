@@ -39,8 +39,8 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center">
-          <img src={logoImg} alt="BharatRides" className="h-14 w-auto object-contain" />
+        <Link to="/" className="flex items-center pl-1">
+          <img src={logoImg} alt="BharatRides" className="h-[56px] w-auto object-contain block" />
         </Link>
 
         {/* Desktop Navigation */}
