@@ -54,7 +54,6 @@ interface Document {
   size: string;
   vehicleImage?: string;
   vehicleName?: string;
-  documentImage?: string;
 }
 
 // Sample documents data with matched vehicle images
@@ -77,14 +76,11 @@ export default function AdminDocuments() {
   const [editFormData, setEditFormData] = useState({
     name: '',
     type: '',
-    imagePreview: '' as string,
   });
   const [addFormData, setAddFormData] = useState({
     name: '',
     type: 'Insurance',
     size: '',
-    imagePreview: '' as string,
-    documentImagePreview: '' as string,
   });
 
   const filteredDocuments = documents.filter(doc =>
@@ -112,7 +108,6 @@ export default function AdminDocuments() {
     setEditFormData({
       name: doc.name,
       type: doc.type,
-      imagePreview: doc.vehicleImage || '',
     });
     setIsEditDialogOpen(true);
   };
@@ -130,7 +125,6 @@ export default function AdminDocuments() {
         ...d, 
         name: editFormData.name,
         type: editFormData.type,
-        vehicleImage: editFormData.imagePreview || d.vehicleImage,
       } : d)
     );
 
@@ -155,33 +149,12 @@ export default function AdminDocuments() {
       type: addFormData.type,
       uploadDate: new Date().toISOString().split('T')[0],
       size: addFormData.size || '1.0 MB',
-      vehicleImage: addFormData.imagePreview || undefined,
-      documentImage: addFormData.documentImagePreview || undefined,
     };
 
     setDocuments(prev => [newDoc, ...prev]);
     toast.success('Document added successfully');
     setIsAddDialogOpen(false);
-    setAddFormData({ name: '', type: 'Insurance', size: '', imagePreview: '', documentImagePreview: '' });
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, target: 'add' | 'edit', field: 'vehicle' | 'document' = 'vehicle') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      if (target === 'add') {
-        if (field === 'vehicle') {
-          setAddFormData(prev => ({ ...prev, imagePreview: result }));
-        } else {
-          setAddFormData(prev => ({ ...prev, documentImagePreview: result }));
-        }
-      } else {
-        setEditFormData(prev => ({ ...prev, imagePreview: result }));
-      }
-    };
-    reader.readAsDataURL(file);
+    setAddFormData({ name: '', type: 'Insurance', size: '' });
   };
 
   const handleDownload = (doc: Document) => {
@@ -452,18 +425,6 @@ export default function AdminDocuments() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Vehicle Image</Label>
-                {editFormData.imagePreview && (
-                  <img src={editFormData.imagePreview} alt="Preview" className="w-full h-32 object-cover rounded-lg mb-2 border border-border" />
-                )}
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(e, 'edit', 'vehicle')}
-                  className="cursor-pointer"
-                />
-              </div>
             </div>
           )}
           <DialogFooter>
@@ -516,30 +477,6 @@ export default function AdminDocuments() {
                 value={addFormData.size}
                 onChange={(e) => setAddFormData(prev => ({ ...prev, size: e.target.value }))}
                 placeholder="e.g., 2.4 MB"
-              />
-            </div>
-            <div>
-              <Label>Vehicle Image</Label>
-              {addFormData.imagePreview && (
-                <img src={addFormData.imagePreview} alt="Vehicle Preview" className="w-full h-32 object-cover rounded-lg mb-2 border border-border" />
-              )}
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleImageUpload(e, 'add', 'vehicle')}
-                className="cursor-pointer"
-              />
-            </div>
-            <div>
-              <Label>Document Image</Label>
-              {addFormData.documentImagePreview && (
-                <img src={addFormData.documentImagePreview} alt="Document Preview" className="w-full h-32 object-cover rounded-lg mb-2 border border-border" />
-              )}
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleImageUpload(e, 'add', 'document')}
-                className="cursor-pointer"
               />
             </div>
           </div>

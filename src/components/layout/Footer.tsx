@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
-
+import logoImg from '@/assets/bharat-rides-logo.png';
 
 const footerLinks = {
   company: [
@@ -40,25 +40,25 @@ export function Footer() {
   return (
     <footer className="bg-primary text-primary-foreground">
       <div className="container py-12 md:py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-8 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
           {/* Brand */}
-          <div className="col-span-1 sm:col-span-2">
-            <Link to="/" className="inline-block mb-5 text-xl font-bold text-primary-foreground">
-              BharatRides
+          <div className="col-span-2">
+            <Link to="/" className="flex items-center gap-2 mb-4">
+              <img src={logoImg} alt="BharatRides" className="h-10 brightness-0 invert" />
             </Link>
-            <p className="text-primary-foreground/70 text-sm leading-relaxed mb-6 max-w-xs">
+            <p className="text-primary-foreground/70 text-sm mb-6 max-w-xs">
               India's trusted vehicle rental service. Quality cars and bikes at affordable prices. Drive your dreams with us.
             </p>
             <div className="space-y-3">
-              <a href="tel:+919876543210" className="flex items-center gap-2.5 text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
-                <Phone className="h-4 w-4 flex-shrink-0" />
+              <a href="tel:+919876543210" className="flex items-center gap-2 text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
+                <Phone className="h-4 w-4" />
                 +91 98765 43210
               </a>
-              <a href="mailto:hello@bharatrides.com" className="flex items-center gap-2.5 text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
-                <Mail className="h-4 w-4 flex-shrink-0" />
+              <a href="mailto:hello@bharatrides.com" className="flex items-center gap-2 text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">
+                <Mail className="h-4 w-4" />
                 hello@bharatrides.com
               </a>
-              <div className="flex items-start gap-2.5 text-sm text-primary-foreground/70">
+              <div className="flex items-start gap-2 text-sm text-primary-foreground/70">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <span>123 Business Hub, Andheri West, Mumbai - 400053</span>
               </div>
