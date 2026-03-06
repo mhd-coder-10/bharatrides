@@ -44,7 +44,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src={logoImg} alt="BharatRides" className="h-14 brightness-0 invert" />
+              <img src={logoImg} alt="BharatRides" className="h-20 w-auto object-contain brightness-0 invert" />
             </Link>
             <p className="text-primary-foreground/70 text-sm mb-6 max-w-xs">
               India's trusted vehicle rental service. Quality cars and bikes at affordable prices. Drive your dreams with us.
