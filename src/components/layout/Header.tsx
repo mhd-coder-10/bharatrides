@@ -37,10 +37,10 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-20 items-center justify-between">
+      <div className="container flex h-24 items-center justify-between pl-6">
         {/* Logo */}
-        <Link to="/" className="flex items-center">
-          <img src={logoImg} alt="BharatRides" className="h-[80px] w-auto object-contain" />
+        <Link to="/" className="flex items-center shrink-0">
+          <img src={logoImg} alt="BharatRides" className="h-[120px] w-[120px] object-contain" />
         </Link>
 
         {/* Desktop Navigation */}
